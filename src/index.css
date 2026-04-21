@@ -1,0 +1,186 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-root: #FFFFFF;
+  --bg-surface: #F5F5F7;
+  --bg-card: #FFFFFF;
+  --bg-hover: #F0F0F2;
+  --border: #D2D2D7;
+  --border-light: #E8E8ED;
+  --border-cal: #D1D1D6;
+  --text-primary: #1D1D1F;
+  --text-secondary: #6E6E73;
+  --text-muted: #A1A1A6;
+  --text-faint: #C7C7CC;
+  --accent-red: #FF3B30;
+  --accent-blue: #007AFF;
+  --accent-green: #34C759;
+  --accent-yellow: #FF9500;
+  --accent-purple: #AF52DE;
+  --accent-pink: #FF2D55;
+  --accent-orange: #FF9500;
+  --accent-cyan: #32ADE6;
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+  --font-mono: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.08), 0 12px 32px rgba(0,0,0,0.06);
+  --radius: 8px;
+  --radius-lg: 12px;
+}
+
+body {
+  font-family: var(--font-display);
+  background: var(--bg-root);
+  color: var(--text-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 13px;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #C7C7CC; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #A0A0A5; }
+
+input, textarea, select {
+  font-family: var(--font-display);
+  background: var(--bg-root);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+  letter-spacing: -0.016em;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+}
+input::placeholder, textarea::placeholder { color: var(--text-muted); }
+select { cursor: pointer; -webkit-appearance: none; appearance: none; padding-right: 28px;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23AEAEB2' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+}
+textarea { resize: vertical; min-height: 64px; line-height: 1.47; }
+button { font-family: var(--font-display); cursor: pointer; transition: all 0.15s; letter-spacing: -0.016em; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.row-hover { transition: background 0.1s; }
+.row-hover:hover { background: var(--bg-hover) !important; }
+
+.drop-zone { border: 2px dashed var(--border); border-radius: var(--radius-lg); padding: 24px; text-align: center; transition: all 0.2s; cursor: pointer; }
+.drop-zone:hover, .drop-zone.dragging { border-color: var(--accent-blue); background: rgba(0,122,255,0.04); }
+
+/* ═══ MOBILE RESPONSIVE ═══ */
+@media (max-width: 768px) {
+  body { font-size: 14px; -webkit-text-size-adjust: 100%; }
+  
+  /* Prevent iOS input zoom */
+  input, textarea, select { font-size: 16px !important; padding: 10px 12px !important; }
+  
+  /* Header */
+  .app-header { padding: 8px 12px !important; }
+  .app-header .logo { font-size: 14px !important; }
+  .app-header .user-name { display: none; }
+  .app-header .log-toggle { display: none; }
+  .app-header button { min-height: 32px; }
+  
+  /* Tabs — horizontal scroll, smaller */
+  .app-tabs { padding: 0 8px !important; }
+  .app-tabs button { padding: 10px 10px !important; font-size: 12px !important; gap: 4px !important; min-height: 40px; }
+  
+  /* Main content area */
+  .app-content { padding: 12px !important; margin-right: 0 !important; }
+  
+  /* Activity log — hide on mobile */
+  .activity-log { display: none !important; }
+  
+  /* Calendar — smaller header, tighter month */
+  .cal-header-title { font-size: 20px !important; }
+  .cal-header-year { font-size: 20px !important; }
+  .cal-controls { flex-wrap: wrap !important; gap: 8px !important; }
+  .cal-controls > div:first-child { flex-wrap: wrap !important; gap: 6px !important; }
+  .cal-day-header { padding: 4px 1px !important; font-size: 9px !important; letter-spacing: 0 !important; }
+  .cal-day-cell { min-height: 70px !important; padding: 2px 2px !important; min-width: 0 !important; overflow: hidden !important; }
+  .cal-day-num { font-size: 11px !important; padding: 1px 3px !important; }
+  .cal-day-today { width: 18px !important; height: 18px !important; font-size: 10px !important; }
+  .cal-item { font-size: 9px !important; padding: 1px 3px !important; margin-bottom: 1px !important; min-width: 0 !important; max-width: 100% !important; gap: 2px !important; }
+  .cal-item span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .cal-item-icon { width: 7px !important; height: 7px !important; }
+  .cal-item img { width: 8px !important; height: 8px !important; flex-shrink: 0; }
+  
+  /* Calendar week — single column */
+  .cal-week-grid { grid-template-columns: 1fr !important; gap: 6px !important; }
+  
+  /* Page headings — smaller on mobile */
+  .page-title-huge { font-size: 22px !important; line-height: 1.1 !important; }
+  .page-title { font-size: 18px !important; }
+  
+  /* Tables — horizontal scroll wrapper */
+  .mobile-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -12px; padding: 0 12px; }
+  .mobile-scroll-inner { min-width: 560px; }
+  
+  /* Tables should not stack/wrap columns — all children kept wide, scroll horizontally */
+  .data-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .data-table > div { min-width: 640px !important; }
+  /* Cards wrapping tables must not clip the horizontal scroll on mobile */
+  .table-card { overflow: visible !important; }
+  
+  /* Modals — full screen on mobile */
+  .modal-overlay { padding: 0 !important; align-items: flex-end !important; }
+  .modal-content { border-radius: 16px 16px 0 0 !important; max-height: 92vh !important; max-width: 100% !important; padding: 20px 16px !important; }
+  
+  /* Forms — single column */
+  .form-grid { grid-template-columns: 1fr !important; }
+  
+  /* Release file uploaders — single column on mobile */
+  .release-files { grid-template-columns: 1fr !important; }
+  
+  /* Streaming links — single column */
+  .streaming-grid { grid-template-columns: 1fr !important; }
+  
+  /* EPK — full width */
+  .epk-container { max-width: 100% !important; }
+  .epk-grid { grid-template-columns: 1fr !important; }
+  
+  /* Ideas quick add — stack */
+  .idea-add { flex-direction: column !important; align-items: stretch !important; }
+  .idea-add > div { width: 100% !important; }
+  
+  /* Cards grid — single or two columns */
+  .cards-grid { grid-template-columns: 1fr !important; }
+  
+  /* Buttons — bigger touch targets but don't override circular buttons */
+  button:not(.task-checkbox):not(.task-delete):not(.modal-close):not(.cal-day-today):not(.cell-icon-btn) { min-height: 32px; }
+  .drop-zone { padding: 14px !important; }
+  
+  /* Filter pill group — wrap or scroll */
+  .filter-pills { flex-wrap: nowrap !important; overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+  .filter-pills button { white-space: nowrap; font-size: 11px !important; padding: 4px 10px !important; }
+  
+  /* Auth screen */
+  .auth-buttons { flex-direction: column !important; gap: 12px !important; }
+  .auth-buttons button { width: 100% !important; max-width: 260px; }
+  
+  /* Calendar controls row — stack */
+  .cal-controls { flex-wrap: wrap !important; gap: 8px !important; }
+  .cal-controls-left { flex-wrap: wrap !important; gap: 8px !important; }
+}
+
+@media (max-width: 480px) {
+  .app-tabs button { padding: 8px 8px !important; font-size: 11px !important; }
+  .cal-day-cell { min-height: 54px !important; }
+  .cal-item { font-size: 7px !important; }
+  .modal-content { padding: 14px 12px !important; }
+  .page-title-huge { font-size: 20px !important; }
+}
