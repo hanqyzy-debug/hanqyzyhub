@@ -341,8 +341,15 @@ button:active:not(:disabled) { transform: scale(0.96); }
   .epk-grid { grid-template-columns: 1fr !important; }
   
   /* Ideas quick add */
-  .idea-add { flex-direction: column !important; align-items: stretch !important; }
-  .idea-add > div { width: 100% !important; }
+  .idea-add { flex-wrap: wrap !important; align-items: stretch !important; }
+  .idea-add > div:first-child { flex: 1 1 100% !important; width: 100% !important; }
+  .idea-add > div:nth-child(2) { flex: 1 1 auto !important; width: auto !important; }
+  .idea-add textarea { min-height: 44px !important; }
+  
+  /* Script editor on mobile — compact buttons, tighter mono */
+  .script-editor-head > div:last-child { width: 100%; }
+  .script-editor-head button { padding: 7px 14px !important; font-size: 13px !important; }
+  .script-body { padding: 14px !important; font-size: 13px !important; min-height: 300px !important; border-radius: 12px !important; }
   
   .cards-grid { grid-template-columns: 1fr !important; }
   

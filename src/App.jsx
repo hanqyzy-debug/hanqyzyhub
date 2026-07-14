@@ -23,7 +23,7 @@ const FILE_TAGS = ['музыка','визуал','промо','документ�
 function today() { return new Date().toISOString().slice(0, 10); }
 function now() { return new Date().toISOString().slice(0, 19); }
 function fmtDate(d) { if (!d) return '—'; const p = d.split('-'); if (p.length !== 3) return d; return `${p[2]}/${p[1]}/${p[0]}`; }
-function timeAgo(t) { if (!t) return ''; const d = (Date.now() - new Date(t).getTime()) / 1000; if (d < 60) return 'только что'; if (d < 3600) return Math.floor(d / 60) + ' мин'; if (d < 86400) return Math.floor(d / 3600) + ' ч'; return t.slice(0, 10); }
+function timeAgo(t) { if (!t) return ''; const d = (Date.now() - new Date(t).getTime()) / 1000; if (d < 60) return 'только что'; if (d < 3600) return Math.floor(d / 60) + ' мин'; if (d < 86400) return Math.floor(d / 3600) + ' ч'; if (d < 172800) return 'вчера'; return fmtDate(t.slice(0, 10)); }
 function getFileIcon(n) { if (!n) return '📎'; if (/\.(wav|mp3|flac|aac|ogg)$/i.test(n)) return '🎵'; if (/\.(png|jpg|jpeg|gif|svg|webp)$/i.test(n)) return '🖼'; if (/\.(mp4|mov|avi|mkv)$/i.test(n)) return '🎬'; if (/\.(doc|docx|pdf|txt)$/i.test(n)) return '📄'; return '📎'; }
 
 /* ═══ FIREBASE ═══ */
@@ -380,13 +380,13 @@ function ScriptsTab({ currentUser, scripts, openScriptId, setOpenScriptId }) {
       </div> : (() => { const s = all.find(x => x._id === modal); if (!s) return null; return <div>
         <div className="script-editor-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, gap: 12 }}>
           <div style={{ flex: '1 1 240px', minWidth: 0 }}><Field label="Название"><input value={s.title || ''} onChange={e => fbUpdate(`scripts/${s._id}`, { title: e.target.value })} style={{ fontSize: 18, fontWeight: 600, border: 'none', padding: 0, boxShadow: 'none' }} /></Field></div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0, flexWrap: 'wrap' }}>{saved && <span style={{ fontSize: 13, color: 'var(--accent-green)', fontWeight: 500 }}>✓</span>}<Btn onClick={() => saveScript(s._id)}>Сохранить</Btn><Btn onClick={() => { toggleArchive(s._id, s); setModal(null); }} outline small color="var(--accent-orange)">{s.archived ? '↩ Вернуть' : '📦 В архив'}</Btn><Btn onClick={() => deleteScript(s._id)} color="var(--accent-red)" outline small>Удалить</Btn></div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0, flexWrap: 'wrap' }}>{saved && <span style={{ fontSize: 13, color: 'var(--accent-green)', fontWeight: 500 }}>✓</span>}<Btn onClick={() => saveScript(s._id)} small>Сохранить</Btn><Btn onClick={() => { toggleArchive(s._id, s); setModal(null); }} outline small color="var(--accent-orange)">{s.archived ? '↩ Вернуть' : '📦 В архив'}</Btn><Btn onClick={() => deleteScript(s._id)} color="var(--accent-red)" outline small>Удалить</Btn></div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
           <Field label="📍 Локация"><input value={s.location || ''} onChange={e => fbUpdate(`scripts/${s._id}`, { location: e.target.value, updatedBy: currentUser, updatedAt: now() })} /></Field>
           <Field label="🎬 Формат"><input value={s.format || ''} onChange={e => fbUpdate(`scripts/${s._id}`, { format: e.target.value, updatedBy: currentUser, updatedAt: now() })} /></Field>
         </div>
-        <Field label="Сценарий"><textarea value={localBody} onChange={e => { setLocalBody(e.target.value); setSaved(false); }} rows={18} style={{ fontFamily: "'Courier New', monospace", fontSize: 14, lineHeight: 1.7, background: '#FAFAFA', border: '1px solid var(--border-light)', borderRadius: 14, padding: 24, width: '100%', minHeight: 400 }} placeholder="Напиши сценарий..." /></Field>
+        <Field label="Сценарий"><textarea className="script-body" value={localBody} onChange={e => { setLocalBody(e.target.value); setSaved(false); }} rows={18} style={{ fontFamily: 'var(--font-mono)', fontSize: 13.5, lineHeight: 1.65, letterSpacing: 0, background: '#FAFAFA', border: '1px solid var(--border-light)', borderRadius: 14, padding: 20, width: '100%', minHeight: 400 }} placeholder="Напиши сценарий..." /></Field>
         <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-muted)' }}>{USERS[s.updatedBy]?.name} · {s.updatedAt}</div>
       </div>; })()}
     </Modal>
