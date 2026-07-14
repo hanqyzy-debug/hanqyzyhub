@@ -318,6 +318,17 @@ button:active:not(:disabled) { transform: scale(0.96); }
   .data-table > div { min-width: 640px !important; }
   .table-card { overflow: visible !important; }
   
+  /* Content plan list — card rows on mobile instead of 9-col grid */
+  .data-table > div.t-head { display: none !important; }
+  .data-table > div.content-row { display: flex !important; flex-wrap: wrap !important; align-items: center !important; min-width: 0 !important; gap: 5px 10px !important; padding: 12px 14px !important; }
+  .content-row .c-title { flex: 1 1 100% !important; font-size: 15px !important; }
+  .content-row .c-script, .content-row .c-metrics { display: none !important; }
+  .content-row .c-plat { order: 2; }
+  
+  /* Script editor header — stack buttons under title on mobile */
+  .script-editor-head { flex-wrap: wrap !important; }
+  .script-editor-head input { width: 100% !important; }
+  
   /* Modals — bottom sheet on mobile */
   .modal-overlay { padding: 0 !important; align-items: flex-end !important; }
   .modal-content { border-radius: 20px 20px 0 0 !important; max-height: 92vh !important; max-width: 100% !important; padding: 22px 18px !important; }
