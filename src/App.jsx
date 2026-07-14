@@ -43,8 +43,23 @@ async function fbStorageUpload(file, path) {
 }
 
 /* ═══ UI ═══ */
-function Badge({ children, color }) { return <span style={{ fontSize: 11, fontWeight: 500, padding: '3px 10px', borderRadius: 20, color, background: color + '14', whiteSpace: 'nowrap' }}>{children}</span>; }
+function Badge({ children, color }) { return <span style={{ fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 20, color, background: color + '16', whiteSpace: 'nowrap' }}>{children}</span>; }
 function UserPhoto({ uid, size = 28 }) { const u = USERS[uid] || USERS.leyla; return <img src={u.photo} alt={u.name} title={u.name} style={{ width: size, height: size, borderRadius: '50%', flexShrink: 0 }} />; }
+/* Apple Reminders style page head: big colored title left, big colored count right */
+function PageHead({ title, count, color, caption, children }) {
+  return <div style={{ marginBottom: 20 }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+      <div style={{ minWidth: 0 }}>
+        <div className="page-title-huge" style={{ fontSize: 32, fontWeight: 800, color, letterSpacing: -0.6, lineHeight: 1.05 }}>{title}</div>
+        {caption && <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6 }}>{caption}</div>}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+        {count !== undefined && <div style={{ fontSize: 32, fontWeight: 700, color, opacity: 0.85, lineHeight: 1.05 }}>{count}</div>}
+      </div>
+    </div>
+    {children && <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>{children}</div>}
+  </div>;
+}
 function Btn({ children, onClick, color = 'var(--accent-blue)', outline, small, style, disabled }) {
   return <button disabled={disabled} onClick={onClick} style={{ padding: small ? '7px 16px' : '11px 22px', borderRadius: 999, border: outline ? `1.5px solid ${color}` : 'none', background: outline ? 'transparent' : color, color: outline ? color : '#fff', fontSize: small ? 13 : 14, fontWeight: 600, opacity: disabled ? 0.4 : 1, cursor: 'pointer', boxShadow: outline ? 'none' : '0 1px 2px rgba(0,0,0,0.06)', whiteSpace: 'nowrap', ...style }}>{children}</button>;
 }
@@ -70,9 +85,9 @@ function Modal({ open, onClose, title, children, wide }) {
 function Empty({ text }) { return <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)', fontSize: 15 }}>{text}</div>; }
 function TabBar({ items, active, onChange }) {
   return <div className="app-tabs" style={{ display: 'flex', overflowX: 'auto', whiteSpace: 'nowrap' }}>
-    {items.map(t => <button key={t.id} onClick={() => onChange(t.id)} className={active === t.id ? 'tab-active' : ''} style={{ border: 'none', background: 'transparent', display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', cursor: 'pointer', flexShrink: 0 }}>
+    {items.map(t => { const isActive = active === t.id; const c = t.color || 'var(--accent-blue)'; return <button key={t.id} onClick={() => onChange(t.id)} className={isActive ? 'tab-active' : ''} style={{ border: 'none', background: 'transparent', display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', cursor: 'pointer', flexShrink: 0, ...(isActive ? { background: `color-mix(in srgb, ${c} 12%, white)`, color: c } : {}) }}>
       <span style={{ fontSize: 14 }}>{t.icon}</span>{t.label}
-    </button>)}
+    </button>; })}
   </div>;
 }
 
@@ -236,11 +251,11 @@ function ContentPlanTab({ currentUser, scripts, allFiles, onOpenScript }) {
         <div className="day-num-wrap" style={{ marginBottom: 3, display: 'flex', justifyContent: 'flex-end' }}>
           {isToday ? <div className="cal-day-today" style={{ width: 22, height: 22, borderRadius: '50%', background: 'var(--accent-red)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600 }}>{d}</div> : <div className="cal-day-num" style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', padding: '2px 6px' }}>{d}</div>}
         </div>
-        {content.map(it => { const ps = getPlatforms(it); return <div key={it._id} className="cal-item" onClick={e => { e.stopPropagation(); setModal(it._id); }} style={{ fontSize: 10, padding: '2px 4px', borderRadius: 3, marginBottom: 1, cursor: 'pointer', background: (STATUSES[it.status]?.color || '#888') + '18', color: STATUSES[it.status]?.color, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 3, borderLeft: `2px solid ${STATUSES[it.status]?.color || '#888'}` }}>
+        {content.map(it => { const ps = getPlatforms(it); return <div key={it._id} className="cal-item" onClick={e => { e.stopPropagation(); setModal(it._id); }} style={{ fontSize: 11, padding: '2px 4px', borderRadius: 4, marginBottom: 1, cursor: 'pointer', color: 'var(--text-primary)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: '50%', background: STATUSES[it.status]?.color || '#888', flexShrink: 0 }} />
           <span style={{ display: 'inline-flex', gap: 2, flexShrink: 0 }}>{ps.slice(0, 3).map((p, i) => <PlatformIcon key={i} platform={p} size={10} />)}</span>
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.title}</span>
         </div>; })}
-        {events.map(ev => <div key={ev._id} className="cal-item" onClick={e => e.stopPropagation()} style={{ fontSize: 10, padding: '2px 4px', borderRadius: 3, marginBottom: 1, background: ev.color + '18', color: ev.color, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', borderLeft: `2px solid ${ev.color}` }}>{ev.title}</div>)}
+        {events.map(ev => <div key={ev._id} className="cal-item" onClick={e => e.stopPropagation()} style={{ fontSize: 11, padding: '2px 4px', borderRadius: 4, marginBottom: 1, color: 'var(--text-primary)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: '50%', background: ev.color, flexShrink: 0 }} />{ev.title}</div>)}
         <div className="day-cell-empty" style={{ flex: 1, minHeight: 8 }}></div>
       </div>; })}
     </div> : <div className="cal-week-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8 }}>
@@ -255,10 +270,10 @@ function ContentPlanTab({ currentUser, scripts, allFiles, onOpenScript }) {
     </div>}
 
     <Card className="table-card" style={{ overflow: 'hidden', marginTop: 16 }}>
-      <div className="data-table"><div style={{ display: 'grid', gridTemplateColumns: '1.5fr 110px 70px 80px 80px 80px 60px 1fr 36px', padding: '10px 16px', borderBottom: '1px solid var(--border-light)', fontSize: 11, fontWeight: 500, color: 'var(--text-muted)' }}><span>Название</span><span>Платформы</span><span>Формат</span><span>Статус</span><span>Дата</span><span>Сценарий</span><span>Файлы</span><span>Метрики</span><span></span></div>
+      <div className="data-table"><div style={{ display: 'grid', gridTemplateColumns: '1.5fr 110px 70px 80px 80px 80px 60px 1fr 36px', padding: '10px 16px', borderBottom: '1px solid var(--border-light)', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)' }}><span>Название</span><span>Платформы</span><span>Формат</span><span>Статус</span><span>Дата</span><span>Сценарий</span><span>Файлы</span><span>Метрики</span><span></span></div>
       {list.sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(it => { const ls = scriptList.find(s => s._id === it.scriptId); const files = itemFiles(it._id); const ps = getPlatforms(it); return <div key={it._id} className="row-hover" onClick={() => setModal(it._id)} style={{ display: 'grid', gridTemplateColumns: '1.5fr 110px 70px 80px 80px 80px 60px 1fr 36px', padding: '10px 16px', borderBottom: '1px solid var(--border-light)', alignItems: 'center', cursor: 'pointer', fontSize: 13 }}>
-        <div><div style={{ fontWeight: 500 }}>{it.title}</div>{it.statusChangedBy && <span style={{ fontSize: 10, color: 'var(--text-muted)' }}><span style={{ color: USERS[it.statusChangedBy]?.color }}>{USERS[it.statusChangedBy]?.name}</span></span>}</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>{ps.slice(0, 3).map((p, i) => <span key={i} title={p}><PlatformIcon platform={p} size={14} /></span>)}{ps.length > 3 && <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>+{ps.length - 3}</span>}</div>
+        <div><div style={{ fontWeight: 500 }}>{it.title}</div>{it.statusChangedBy && <span style={{ fontSize: 11, color: 'var(--text-muted)' }}><span style={{ color: USERS[it.statusChangedBy]?.color }}>{USERS[it.statusChangedBy]?.name}</span></span>}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>{ps.slice(0, 3).map((p, i) => <span key={i} title={p}><PlatformIcon platform={p} size={14} /></span>)}{ps.length > 3 && <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>+{ps.length - 3}</span>}</div>
         <Badge color="var(--accent-purple)">{it.format}</Badge>
         <Badge color={STATUSES[it.status]?.color}>{STATUSES[it.status]?.label}</Badge>
         <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{fmtDate(it.date)}</span>
@@ -341,15 +356,12 @@ function ScriptsTab({ currentUser, scripts, openScriptId, setOpenScriptId }) {
   const deleteScript = (id) => { fbRemove(`scripts/${id}`); logActivity(currentUser, 'удалил сценарий'); setModal(null); };
   const toggleArchive = (id, s) => { fbUpdate(`scripts/${id}`, { archived: !s.archived, updatedBy: currentUser, updatedAt: now() }); logActivity(currentUser, `${s.archived ? 'вернул из архива' : 'убрал в архив'}: ${s.title}`); };
   return <div style={{ animation: 'fadeIn .2s ease' }}>
-    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <span style={{ fontSize: 15, color: 'var(--text-secondary)' }}>{list.length} сценариев</span>
-        {(archivedCount > 0 || showArchive) && <div className="seg-control">
-          {[{ id: false, l: 'Активные' }, { id: true, l: `Архив · ${archivedCount}` }].map(v => <button key={String(v.id)} onClick={() => setShowArchive(v.id)} className={showArchive === v.id ? 'seg-active' : ''}>{v.l}</button>)}
-        </div>}
-      </div>
+    <PageHead title="Сценарии" count={list.length} color="var(--accent-purple)">
+      {(archivedCount > 0 || showArchive) && <div className="seg-control">
+        {[{ id: false, l: 'Активные' }, { id: true, l: `Архив · ${archivedCount}` }].map(v => <button key={String(v.id)} onClick={() => setShowArchive(v.id)} className={showArchive === v.id ? 'seg-active' : ''}>{v.l}</button>)}
+      </div>}
       <Btn onClick={() => setModal('add')} small color="var(--accent-purple)">+ Сценарий</Btn>
-    </div>
+    </PageHead>
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>{list.map(s => <Card key={s._id} style={{ padding: 16, cursor: 'pointer', opacity: s.archived ? 0.7 : 1 }} onClick={() => openEditor(s._id)}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
         <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>{s.title}</div>
@@ -386,9 +398,9 @@ function IdeasTab({ currentUser }) {
   const [ideas] = useFirebase('ideas'); const [form, setForm] = useState({ text: '', category: 'общее' }); const list = toList(ideas).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
   const CATS = ['общее','музыка','контент','визуал','бизнес','тексты','другое']; const catC = { 'общее':'#007AFF','музыка':'#FF3B30','контент':'#AF52DE','визуал':'#FF9500','бизнес':'#34C759','тексты':'#FF2D55','другое':'#AEAEB2' };
   const add = () => { if (!form.text.trim()) return; fbPush('ideas', { ...form, createdBy: currentUser, createdAt: now() }); logActivity(currentUser, 'записал идею'); notifyOther(currentUser, 'записал новую идею'); setForm({ text: '', category: 'общее' }); };
-  return <div style={{ animation: 'fadeIn .2s ease' }}><h3 className="page-title" style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.3, marginBottom: 16 }}>Идеи 💡</h3>
+  return <div style={{ animation: 'fadeIn .2s ease' }}><PageHead title="Идеи" count={list.length} color="var(--accent-yellow)" />
     <Card style={{ padding: 16, marginBottom: 20 }}><div className="idea-add" style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}><div style={{ flex: 1 }}><textarea value={form.text} onChange={e => setForm({ ...form, text: e.target.value })} placeholder="Запиши идею..." rows={2} style={{ minHeight: 50 }} /></div><div style={{ width: 120 }}><select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>{CATS.map(c => <option key={c}>{c}</option>)}</select></div><Btn onClick={add} small>Записать</Btn></div></Card>
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>{list.map(i => <Card key={i._id} style={{ padding: 16 }}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}><Badge color={catC[i.category] || '#888'}>{i.category}</Badge><button onClick={() => fbRemove(`ideas/${i._id}`)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer' }}>✕</button></div><div style={{ fontSize: 14, whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>{i.text}</div><div style={{ marginTop: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><UserPhoto uid={i.createdBy} size={20} /><span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{timeAgo(i.createdAt)}</span></div></Card>)}</div>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>{list.map(i => <Card key={i._id} style={{ padding: 16 }}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}><Badge color={catC[i.category] || '#888'}>{i.category}</Badge><button onClick={() => fbRemove(`ideas/${i._id}`)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer' }}>✕</button></div><div style={{ fontSize: 14, whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>{i.text}</div><div style={{ marginTop: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><UserPhoto uid={i.createdBy} size={20} /><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{timeAgo(i.createdAt)}</span></div></Card>)}</div>
     {list.length === 0 && <Empty text="Пока нет идей" />}
   </div>;
 }
@@ -408,9 +420,9 @@ function ReleasesTab({ currentUser, allFiles }) {
   const ld = (field, val) => { setLocalData(prev => ({ ...prev, [field]: val })); setSaved(false); };
 
   return <div style={{ animation: 'fadeIn .2s ease' }}>
-    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}><span style={{ fontSize: 15, color: 'var(--text-secondary)' }}>{list.length} релизов</span><Btn onClick={() => setModal('add')} small color="var(--accent-orange)">+ Релиз</Btn></div>
+    <PageHead title="Релизы" count={list.length} color="var(--accent-red)"><Btn onClick={() => setModal('add')} small color="var(--accent-red)">+ Релиз</Btn></PageHead>
     <Card className="table-card" style={{ overflow: 'hidden' }}>
-      <div className="data-table"><div style={{ display: 'grid', gridTemplateColumns: '1.5fr 90px 100px 80px 60px 80px 1fr 36px', padding: '10px 16px', borderBottom: '1px solid var(--border-light)', fontSize: 11, fontWeight: 500, color: 'var(--text-muted)' }}><span>Трек</span><span>Дата</span><span>Стадия</span><span>Обложка</span><span>Файлы</span><span>Кто</span><span>Заметки</span><span></span></div>
+      <div className="data-table"><div style={{ display: 'grid', gridTemplateColumns: '1.5fr 90px 100px 80px 60px 80px 1fr 36px', padding: '10px 16px', borderBottom: '1px solid var(--border-light)', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)' }}><span>Трек</span><span>Дата</span><span>Стадия</span><span>Обложка</span><span>Файлы</span><span>Кто</span><span>Заметки</span><span></span></div>
       {list.sort((a, b) => (a.releaseDate || '').localeCompare(b.releaseDate || '')).map(r => { const f = rF(r._id); return <div key={r._id} className="row-hover" onClick={() => openRelease(r._id)} style={{ display: 'grid', gridTemplateColumns: '1.5fr 90px 100px 80px 60px 80px 1fr 36px', padding: '10px 16px', borderBottom: '1px solid var(--border-light)', alignItems: 'center', cursor: 'pointer', fontSize: 13 }}>
         <span style={{ fontWeight: 600 }}>{r.title}</span><span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{fmtDate(r.releaseDate)}</span><Badge color={stC(r.stage)}>{r.stage}</Badge><Badge color={r.coverState === 'Утверждена' ? 'var(--accent-green)' : 'var(--text-muted)'}>{r.coverState}</Badge>
         <span style={{ fontSize: 11, color: f.length ? 'var(--accent-green)' : 'var(--text-muted)' }}>{f.length ? `📁${f.length}` : '—'}</span><UserPhoto uid={r.updatedBy} size={22} />
@@ -477,15 +489,12 @@ function ConcertsTab({ currentUser }) {
   const stColor = s => s === 'Подтверждено' ? 'var(--accent-green)' : s === 'Отменено' ? 'var(--accent-red)' : s === 'Прошло' ? 'var(--text-muted)' : 'var(--accent-yellow)';
   
   return <div style={{ animation: 'fadeIn .2s ease' }}>
-    <div className="cal-controls" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <span style={{ fontSize: 15, color: 'var(--text-secondary)' }}>{list.length} событий</span>
-        <div className="seg-control">
-          {[{ id: 'list', l: 'Список' }, { id: 'calendar', l: 'Календарь' }].map(v => <button key={v.id} onClick={() => setView(v.id)} className={view === v.id ? 'seg-active' : ''}>{v.l}</button>)}
-        </div>
+    <PageHead title="Концерты" count={list.length} color="var(--accent-pink)">
+      <div className="seg-control">
+        {[{ id: 'list', l: 'Список' }, { id: 'calendar', l: 'Календарь' }].map(v => <button key={v.id} onClick={() => setView(v.id)} className={view === v.id ? 'seg-active' : ''}>{v.l}</button>)}
       </div>
       <Btn onClick={() => setModal('add')} small color="var(--accent-pink)">+ Концерт</Btn>
-    </div>
+    </PageHead>
     
     {view === 'calendar' ? <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
@@ -502,12 +511,12 @@ function ConcertsTab({ currentUser }) {
           <div className="day-num-wrap" style={{ marginBottom: 3, display: 'flex', justifyContent: 'flex-end' }}>
             {isToday ? <div className="cal-day-today" style={{ width: 22, height: 22, borderRadius: '50%', background: 'var(--accent-pink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600 }}>{d}</div> : <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', padding: '2px 6px' }}>{d}</div>}
           </div>
-          {dayConcerts.map(c => <div key={c._id} className="cal-item" onClick={e => { e.stopPropagation(); setModal(c._id); }} style={{ fontSize: 10, padding: '3px 5px', borderRadius: 4, marginBottom: 2, cursor: 'pointer', background: stColor(c.status) + '18', color: stColor(c.status), fontWeight: 500, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', borderLeft: `2px solid ${stColor(c.status)}` }}>
+          {dayConcerts.map(c => <div key={c._id} className="cal-item" onClick={e => { e.stopPropagation(); setModal(c._id); }} style={{ fontSize: 11, padding: '3px 5px', borderRadius: 4, marginBottom: 2, cursor: 'pointer', color: 'var(--text-primary)', fontWeight: 500, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: '50%', background: stColor(c.status), flexShrink: 0 }} />
             🎤 {c.time && <span style={{ opacity: 0.7 }}>{c.time} </span>}{c.title}
           </div>)}
         </div>; })}
       </div>
-    </div> : <Card className="table-card" style={{ overflow: 'hidden' }}><div className="data-table"><div style={{ display: 'grid', gridTemplateColumns: '1.3fr 90px 60px 1fr 1fr 90px 70px 36px', padding: '10px 16px', borderBottom: '1px solid var(--border-light)', fontSize: 11, fontWeight: 500, color: 'var(--text-muted)' }}><span>Название</span><span>Дата</span><span>Время</span><span>Площадка</span><span>Город</span><span>Статус</span><span>Кто</span><span></span></div>
+    </div> : <Card className="table-card" style={{ overflow: 'hidden' }}><div className="data-table"><div style={{ display: 'grid', gridTemplateColumns: '1.3fr 90px 60px 1fr 1fr 90px 70px 36px', padding: '10px 16px', borderBottom: '1px solid var(--border-light)', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)' }}><span>Название</span><span>Дата</span><span>Время</span><span>Площадка</span><span>Город</span><span>Статус</span><span>Кто</span><span></span></div>
       {list.sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(c => <div key={c._id} className="row-hover" onClick={() => setModal(c._id)} style={{ display: 'grid', gridTemplateColumns: '1.3fr 90px 60px 1fr 1fr 90px 70px 36px', padding: '10px 16px', borderBottom: '1px solid var(--border-light)', alignItems: 'center', cursor: 'pointer', fontSize: 13 }}><span style={{ fontWeight: 500 }}>{c.title}</span><span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{fmtDate(c.date)}</span><span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{c.time || '—'}</span><span style={{ color: 'var(--text-secondary)' }}>{c.venue || '—'}</span><span style={{ color: 'var(--text-secondary)' }}>{c.city || '—'}</span><Badge color={stColor(c.status)}>{c.status}</Badge><UserPhoto uid={c.updatedBy} size={22} /><button onClick={e => { e.stopPropagation(); fbRemove(`concerts/${c._id}`); }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer' }}>✕</button></div>)}</div>
       {list.length === 0 && <Empty text="Нет концертов" />}</Card>}
     
@@ -520,8 +529,8 @@ function ContactsTab({ currentUser }) {
   const [contacts] = useFirebase('contacts'); const [modal, setModal] = useState(null); const [form, setForm] = useState({ name: '', company: '', role: '', offer: '', email: '', phone: '', social: '', status: 'Новый', notes: '' }); const list = toList(contacts); const CS = ['Новый', 'В переговорах', 'Согласовано', 'Отказ', 'Завершено'];
   const addC = () => { if (!form.name.trim()) return; fbPush('contacts', { ...form, createdBy: currentUser, updatedBy: currentUser, updatedAt: now() }); logActivity(currentUser, `контакт: ${form.name}`); notifyOther(currentUser, `контакт: ${form.name}`); setForm({ name: '', company: '', role: '', offer: '', email: '', phone: '', social: '', status: 'Новый', notes: '' }); setModal(null); };
   const upd = (id, u) => fbUpdate(`contacts/${id}`, { ...u, updatedBy: currentUser, updatedAt: now() });
-  return <div style={{ animation: 'fadeIn .2s ease' }}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}><span style={{ fontSize: 15, color: 'var(--text-secondary)' }}>{list.length} контактов</span><Btn onClick={() => setModal('add')} small color="var(--accent-cyan)">+ Контакт</Btn></div>
-    <Card className="table-card" style={{ overflow: 'hidden' }}><div className="data-table"><div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1.5fr 80px 70px 36px', padding: '10px 16px', borderBottom: '1px solid var(--border-light)', fontSize: 11, fontWeight: 500, color: 'var(--text-muted)' }}><span>Имя</span><span>Компания</span><span>Роль</span><span>Предложение</span><span>Статус</span><span>Кто</span><span></span></div>
+  return <div style={{ animation: 'fadeIn .2s ease' }}><PageHead title="Контакты" count={list.length} color="var(--accent-green)"><Btn onClick={() => setModal('add')} small color="var(--accent-green)">+ Контакт</Btn></PageHead>
+    <Card className="table-card" style={{ overflow: 'hidden' }}><div className="data-table"><div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1.5fr 80px 70px 36px', padding: '10px 16px', borderBottom: '1px solid var(--border-light)', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)' }}><span>Имя</span><span>Компания</span><span>Роль</span><span>Предложение</span><span>Статус</span><span>Кто</span><span></span></div>
       {list.map(c => <div key={c._id} className="row-hover" onClick={() => setModal(c._id)} style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1.5fr 80px 70px 36px', padding: '10px 16px', borderBottom: '1px solid var(--border-light)', alignItems: 'center', cursor: 'pointer', fontSize: 13 }}><span style={{ fontWeight: 500 }}>{c.name}</span><span style={{ color: 'var(--text-secondary)' }}>{c.company || '—'}</span><span style={{ color: 'var(--text-secondary)' }}>{c.role || '—'}</span><span style={{ color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.offer || '—'}</span><Badge color={c.status === 'Согласовано' ? 'var(--accent-green)' : c.status === 'Отказ' ? 'var(--accent-red)' : 'var(--accent-yellow)'}>{c.status}</Badge><UserPhoto uid={c.updatedBy} size={22} /><button onClick={e => { e.stopPropagation(); fbRemove(`contacts/${c._id}`); }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer' }}>✕</button></div>)}</div>
       {list.length === 0 && <Empty text="Нет контактов" />}</Card>
     <Modal open={!!modal} onClose={() => setModal(null)} title={modal === 'add' ? 'Новый контакт' : 'Редактировать'}>{modal === 'add' ? <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}><Field label="Имя"><input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></Field><Field label="Компания"><input value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} /></Field><Field label="Роль"><input value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} /></Field><Field label="Статус"><select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>{CS.map(s => <option key={s}>{s}</option>)}</select></Field><div style={{ gridColumn: '1/-1' }}><Field label="Предложение"><textarea value={form.offer} onChange={e => setForm({ ...form, offer: e.target.value })} /></Field></div><Field label="Email"><input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></Field><Field label="Телефон"><input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></Field><div style={{ gridColumn: '1/-1' }}><Field label="Соцсети"><input value={form.social} onChange={e => setForm({ ...form, social: e.target.value })} /></Field></div><div style={{ gridColumn: '1/-1' }}><Field label="Заметки"><textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></Field></div><div style={{ gridColumn: '1/-1' }}><Btn onClick={addC} color="var(--accent-cyan)">Создать</Btn></div></div> : (() => { const c = list.find(x => x._id === modal); if (!c) return null; return <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}><Field label="Имя"><input value={c.name || ''} onChange={e => upd(c._id, { name: e.target.value })} /></Field><Field label="Компания"><input value={c.company || ''} onChange={e => upd(c._id, { company: e.target.value })} /></Field><Field label="Роль"><input value={c.role || ''} onChange={e => upd(c._id, { role: e.target.value })} /></Field><Field label="Статус"><select value={c.status} onChange={e => upd(c._id, { status: e.target.value })}>{CS.map(s => <option key={s}>{s}</option>)}</select></Field><div style={{ gridColumn: '1/-1' }}><Field label="Предложение"><textarea value={c.offer || ''} onChange={e => upd(c._id, { offer: e.target.value })} /></Field></div><Field label="Email"><input value={c.email || ''} onChange={e => upd(c._id, { email: e.target.value })} /></Field><Field label="Телефон"><input value={c.phone || ''} onChange={e => upd(c._id, { phone: e.target.value })} /></Field><div style={{ gridColumn: '1/-1' }}><Field label="Соцсети"><input value={c.social || ''} onChange={e => upd(c._id, { social: e.target.value })} /></Field></div><div style={{ gridColumn: '1/-1' }}><Field label="Заметки"><textarea value={c.notes || ''} onChange={e => upd(c._id, { notes: e.target.value })} /></Field></div><div style={{ gridColumn: '1/-1', fontSize: 11, color: 'var(--text-muted)' }}>{USERS[c.updatedBy]?.name} · {c.updatedAt}</div></div>; })()}</Modal>
@@ -655,7 +664,7 @@ function TasksTab({ currentUser }) {
           <div className="day-num-wrap" style={{ marginBottom: 3, display: 'flex', justifyContent: 'flex-end' }}>
             {isToday ? <div className="cal-day-today" style={{ width: 22, height: 22, borderRadius: '50%', background: 'var(--accent-orange)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600 }}>{d}</div> : <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', padding: '2px 6px' }}>{d}</div>}
           </div>
-          {dayTasks.map(t => <div key={t._id} className="cal-item" onClick={e => { e.stopPropagation(); setModal(t._id); }} style={{ fontSize: 10, padding: '3px 5px', borderRadius: 4, marginBottom: 2, cursor: 'pointer', background: taskColor(t) + '16', color: taskColor(t), fontWeight: 500, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', borderLeft: `2px solid ${taskColor(t)}`, textDecoration: t.done ? 'line-through' : 'none' }}>
+          {dayTasks.map(t => <div key={t._id} className="cal-item" onClick={e => { e.stopPropagation(); setModal(t._id); }} style={{ fontSize: 11, padding: '3px 5px', borderRadius: 4, marginBottom: 2, cursor: 'pointer', color: 'var(--text-primary)', fontWeight: 500, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 4, textDecoration: t.done ? 'line-through' : 'none' }}><span style={{ width: 7, height: 7, borderRadius: '50%', background: taskColor(t), flexShrink: 0 }} />
             {t.done ? '✓ ' : ''}{t.title}
           </div>)}
         </div>; })}
@@ -758,19 +767,16 @@ function FestivalsTab({ currentUser }) {
   useEffect(() => { if (Object.keys(festivals).length === 0) { INITIAL_FESTIVALS.forEach(f => fbPush('festivals', { ...f, location: '', deadline: '', createdBy: 'leyla', updatedBy: 'leyla', updatedAt: now() })); } }, [festivals]);
 
   return <div style={{ animation: 'fadeIn .2s ease' }}>
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
-      <h3 className="page-title" style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.3 }}>Фестивали 🎪</h3>
-      <Btn onClick={() => setModal('add')} small color="var(--accent-orange)">+ Фестиваль</Btn>
-    </div>
+    <PageHead title="Фестивали" count={filtered.length} color="var(--accent-indigo)"><Btn onClick={() => setModal('add')} small color="var(--accent-indigo)">+ Фестиваль</Btn></PageHead>
     <div className="filter-pills" style={{ display: 'flex', gap: 2, background: 'var(--bg-surface)', borderRadius: 10, padding: 3, marginBottom: 16, width: 'fit-content', maxWidth: '100%' }}>
       {[{ id: 'all', l: 'Все' }, ...FEST_CATS.map(c => ({ id: c, l: c }))].map(f => <button key={f.id} onClick={() => setCatFilter(f.id)} style={{ padding: '6px 14px', borderRadius: 7, border: 'none', fontSize: 12, fontWeight: 500, background: catFilter === f.id ? '#fff' : 'transparent', color: catFilter === f.id ? 'var(--text-primary)' : 'var(--text-muted)', boxShadow: catFilter === f.id ? 'var(--shadow-sm)' : 'none', cursor: 'pointer' }}>{f.l}</button>)}
     </div>
     <Card className="table-card" style={{ overflow: 'hidden' }}>
-      <div className="data-table"><div style={{ display: 'grid', gridTemplateColumns: '1.5fr 80px 1fr 90px 80px 70px 36px', padding: '10px 16px', borderBottom: '1px solid var(--border-light)', fontSize: 11, fontWeight: 500, color: 'var(--text-muted)', minWidth: 650 }}><span>Название</span><span>Категория</span><span>Даты / Жанры</span><span>Дедлайн</span><span>Статус</span><span>Кто</span><span></span></div>
+      <div className="data-table"><div style={{ display: 'grid', gridTemplateColumns: '1.5fr 80px 1fr 90px 80px 70px 36px', padding: '10px 16px', borderBottom: '1px solid var(--border-light)', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', minWidth: 650 }}><span>Название</span><span>Категория</span><span>Даты / Жанры</span><span>Дедлайн</span><span>Статус</span><span>Кто</span><span></span></div>
       {filtered.map(f => <div key={f._id} className="row-hover" onClick={() => setModal(f._id)} style={{ display: 'grid', gridTemplateColumns: '1.5fr 80px 1fr 90px 80px 70px 36px', padding: '10px 16px', borderBottom: '1px solid var(--border-light)', alignItems: 'center', cursor: 'pointer', fontSize: 13, minWidth: 650 }}>
-        <div><span style={{ fontWeight: 500 }}>{f.name}</span>{f.website && <a href={f.website} target="_blank" rel="noopener" onClick={e => e.stopPropagation()} style={{ color: 'var(--accent-blue)', fontSize: 11, marginLeft: 6 }}>↗</a>}{f.notes && <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>{f.notes.slice(0, 50)}{f.notes.length > 50 ? '...' : ''}</div>}</div>
+        <div><span style={{ fontWeight: 500 }}>{f.name}</span>{f.website && <a href={f.website} target="_blank" rel="noopener" onClick={e => e.stopPropagation()} style={{ color: 'var(--accent-blue)', fontSize: 11, marginLeft: 6 }}>↗</a>}{f.notes && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{f.notes.slice(0, 50)}{f.notes.length > 50 ? '...' : ''}</div>}</div>
         <Badge color={f.openCall ? 'var(--accent-green)' : 'var(--text-muted)'}>{f.category || '—'}</Badge>
-        <div><div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{f.dates || '—'}</div>{f.genre && <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{f.genre}</div>}</div>
+        <div><div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{f.dates || '—'}</div>{f.genre && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{f.genre}</div>}</div>
         <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{fmtDate(f.deadline)}</span>
         <Badge color={stC(f.status)}>{f.status}</Badge>
         <UserPhoto uid={f.updatedBy} size={22} />
@@ -1133,9 +1139,9 @@ function FinanceTab({ currentUser }) {
 
 /* ═══ 11. FILES ═══ */
 function FilesTab({ currentUser, allFiles }) {
-  return <div style={{ animation: 'fadeIn .2s ease' }}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}><span style={{ fontSize: 15, color: 'var(--text-secondary)' }}>{allFiles.length} файлов</span></div>
+  return <div style={{ animation: 'fadeIn .2s ease' }}><PageHead title="Файлы" count={allFiles.length} color="var(--accent-teal)" />
     <Card style={{ padding: 16, marginBottom: 16 }}><YDFileUploader currentUser={currentUser} /></Card>
-    <Card className="table-card" style={{ overflow: 'hidden' }}><div className="data-table"><div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 80px 80px 90px 70px 36px', padding: '10px 16px', borderBottom: '1px solid var(--border-light)', fontSize: 11, fontWeight: 500, color: 'var(--text-muted)' }}><span>Файл</span><span>Ссылка</span><span>Размер</span><span>Тег</span><span>Дата</span><span>Кто</span><span></span></div>
+    <Card className="table-card" style={{ overflow: 'hidden' }}><div className="data-table"><div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 80px 80px 90px 70px 36px', padding: '10px 16px', borderBottom: '1px solid var(--border-light)', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)' }}><span>Файл</span><span>Ссылка</span><span>Размер</span><span>Тег</span><span>Дата</span><span>Кто</span><span></span></div>
       {allFiles.sort((a, b) => (b.date || '').localeCompare(a.date || '')).map(f => <div key={f._id} className="row-hover" style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 80px 80px 90px 70px 36px', padding: '10px 16px', borderBottom: '1px solid var(--border-light)', alignItems: 'center', fontSize: 13 }}><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span>{getFileIcon(f.name)}</span><span style={{ fontWeight: 500 }}>{f.name}</span></div><div>{f.url ? <a href={f.url} target="_blank" rel="noopener" style={{ color: 'var(--accent-blue)', fontSize: 12 }}>открыть ↗</a> : <span style={{ color: 'var(--text-muted)' }}>Я.Диск</span>}</div><span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{f.size || '—'}</span><Badge color="var(--accent-purple)">{f.tag}</Badge><span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{fmtDate(f.date)}</span><UserPhoto uid={f.uploadedBy} size={22} /><button onClick={() => { fbRemove(`files/${f._id}`); if (f.ydPath) ydDelete(f.ydPath).catch(() => { }); }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer' }}>✕</button></div>)}</div>
       {allFiles.length === 0 && <Empty text="Нет файлов" />}</Card>
   </div>;
@@ -1162,17 +1168,17 @@ function AuthScreen({ onSelect }) {
 
 /* ═══ MAIN ═══ */
 const TABS = [
-  { id: 'content', label: 'Контент-план', icon: '📅' },
-  { id: 'scripts', label: 'Сценарии', icon: '📝' },
-  { id: 'tasks', label: 'Задачи', icon: '☑' },
-  { id: 'ideas', label: 'Идеи', icon: '💡' },
-  { id: 'releases', label: 'Релизы', icon: '💿' },
-  { id: 'concerts', label: 'Концерты', icon: '🎤' },
-  { id: 'festivals', label: 'Фестивали', icon: '🎪' },
-  { id: 'contacts', label: 'Контакты', icon: '🤝' },
-  { id: 'finance', label: 'Смета', icon: '💰' },
-  { id: 'epk', label: 'EPK', icon: '📋' },
-  { id: 'files', label: 'Файлы', icon: '📁' },
+  { id: 'content', label: 'Контент-план', icon: '📅', color: 'var(--accent-blue)' },
+  { id: 'scripts', label: 'Сценарии', icon: '📝', color: 'var(--accent-purple)' },
+  { id: 'tasks', label: 'Задачи', icon: '☑', color: 'var(--accent-orange)' },
+  { id: 'ideas', label: 'Идеи', icon: '💡', color: 'var(--accent-yellow)' },
+  { id: 'releases', label: 'Релизы', icon: '💿', color: 'var(--accent-red)' },
+  { id: 'concerts', label: 'Концерты', icon: '🎤', color: 'var(--accent-pink)' },
+  { id: 'festivals', label: 'Фестивали', icon: '🎪', color: 'var(--accent-indigo)' },
+  { id: 'contacts', label: 'Контакты', icon: '🤝', color: 'var(--accent-green)' },
+  { id: 'finance', label: 'Смета', icon: '💰', color: 'var(--accent-green)' },
+  { id: 'epk', label: 'EPK', icon: '📋', color: 'var(--accent-cyan)' },
+  { id: 'files', label: 'Файлы', icon: '📁', color: 'var(--accent-teal)' },
 ];
 
 export default function App() {

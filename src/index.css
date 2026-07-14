@@ -254,7 +254,7 @@ button:active:not(:disabled) { transform: scale(0.96); }
   padding: 10px 16px !important;
   font-size: 14px !important;
   font-weight: 500 !important;
-  color: var(--text-secondary) !important;
+  color: var(--text-secondary);
   transition: all 0.15s ease !important;
 }
 .app-tabs button span { font-size: 16px !important; }
@@ -263,8 +263,6 @@ button:active:not(:disabled) { transform: scale(0.96); }
   color: var(--text-primary) !important;
 }
 .app-tabs button.tab-active {
-  background: var(--tint-blue) !important;
-  color: var(--accent-blue) !important;
   font-weight: 600 !important;
 }
 
