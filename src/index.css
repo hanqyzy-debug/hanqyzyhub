@@ -2,15 +2,15 @@
 
 :root {
   /* Softer, warmer base */
-  --bg-root: #F7F8FA;
-  --bg-surface: #EFF1F4;
+  --bg-root: #F1F3F6;
+  --bg-surface: #E9ECF1;
   --bg-card: #FFFFFF;
   --bg-hover: #F2F4F7;
   --bg-pressed: #E8EBF0;
   
-  --border: #DCDFE5;
-  --border-light: #ECEEF2;
-  --border-cal: #E0E3E8;
+  --border: #CDD2DA;
+  --border-light: #DFE3E9;
+  --border-cal: #D5DAE1;
   
   --text-primary: #1B1D22;
   --text-secondary: #5A5F6B;
@@ -166,6 +166,7 @@ button:active:not(:disabled) { transform: scale(0.96); }
 /* ═══ iOS INSET-GROUPED LIST (like iOS Settings / Reminders) ═══ */
 .ios-card {
   background: var(--bg-card);
+  border: 1px solid var(--border-light);
   border-radius: 18px;
   box-shadow: 0 1px 1px rgba(15, 23, 42, 0.03), 0 2px 8px rgba(15, 23, 42, 0.04);
   overflow: hidden;
@@ -186,7 +187,8 @@ button:active:not(:disabled) { transform: scale(0.96); }
 /* ═══ iOS SEGMENTED CONTROL ═══ */
 .seg-control {
   display: inline-flex;
-  background: rgba(118, 118, 128, 0.12);
+  background: rgba(118, 118, 128, 0.10);
+  border: 1px solid var(--border-light);
   border-radius: 9px;
   padding: 2px;
   gap: 0;
