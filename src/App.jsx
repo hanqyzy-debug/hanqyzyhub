@@ -3,7 +3,7 @@ import { db, ref, push, remove, update, onValue, off, storage, storageRef, uploa
 import { getYandexToken, startYandexAuth, checkYandexAuthCallback, uploadFile as ydUpload, deleteFile as ydDelete, getDownloadLink } from './yandexDisk.js';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
-import { IG_STATS } from './statsData.js';
+import { IG_STATS, IG_STORIES, IG_AUDIENCE } from './statsData.js';
 
 /* ═══ CONSTANTS ═══ */
 const USERS = {
@@ -1193,6 +1193,7 @@ function StatCard({ label, value, sub, color }) {
 
 function StatsTab() {
   const [platform, setPlatform] = useState('instagram');
+  const [igView, setIgView] = useState('posts');
   const data = IG_STATS;
 
   if (platform !== 'instagram') {
@@ -1251,9 +1252,15 @@ function StatsTab() {
 
   return <div style={{ animation: 'fadeIn .2s ease' }}>
     <PageHead title="Статистика" color="var(--accent-cyan)" caption="Instagram · 01.01.2026 — 15.07.2026" />
-    <div className="seg-control" style={{ marginBottom: 20, maxWidth: '100%', overflowX: 'auto' }}>
-      {STAT_PLATFORMS.map(p => <button key={p.id} onClick={() => setPlatform(p.id)} className={platform === p.id ? 'seg-active' : ''}>{p.label}</button>)}
+    <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+      <div className="seg-control" style={{ maxWidth: '100%', overflowX: 'auto' }}>
+        {STAT_PLATFORMS.map(p => <button key={p.id} onClick={() => setPlatform(p.id)} className={platform === p.id ? 'seg-active' : ''}>{p.label}</button>)}
+      </div>
+      <div className="seg-control">
+        {[{ id: 'posts', l: 'Публикации' }, { id: 'stories', l: 'Сторис' }, { id: 'audience', l: 'Аудитория' }].map(v => <button key={v.id} onClick={() => setIgView(v.id)} className={igView === v.id ? 'seg-active' : ''}>{v.l}</button>)}
+      </div>
     </div>
+    {igView === 'audience' ? <AudienceView /> : igView === 'stories' ? <StoriesView /> : <>
 
     {/* Summary */}
     <div className="cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 20 }}>
@@ -1323,7 +1330,158 @@ function StatsTab() {
         <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent-green)', flexShrink: 0 }}>+{p.f} ({p.fRate.toFixed(1).replace('.', ',')}/10к)</div>
       </div>)}
     </Card>}
+    </>}
   </div>;
+}
+
+function StoriesView() {
+  const data = IG_STORIES;
+  const total = data.reduce((a, s) => ({ v: a.v + s.v, r: a.r + s.r, pv: a.pv + s.pv, rep: a.rep + s.rep, st: a.st + s.st, f: a.f + s.f, lc: a.lc + s.lc }), { v: 0, r: 0, pv: 0, rep: 0, st: 0, f: 0, lc: 0 });
+  const avgV = Math.round(total.v / Math.max(1, data.length));
+
+  const byMonth = {};
+  data.forEach(s => { if (!s.date) return; const k = s.date.slice(0, 7); if (!byMonth[k]) byMonth[k] = { v: 0, n: 0, pv: 0 }; byMonth[k].v += s.v; byMonth[k].n += 1; byMonth[k].pv += s.pv; });
+  const months = Object.entries(byMonth).sort((a, b) => a[0].localeCompare(b[0]));
+  const maxAvg = Math.max(...months.map(([, m]) => m.v / m.n), 1);
+  const bestMonth = months.length ? months.reduce((a, b) => (b[1].v / b[1].n > a[1].v / a[1].n ? b : a)) : null;
+
+  const topViews = [...data].sort((a, b) => b.v - a.v).slice(0, 5);
+  const topProfile = [...data].filter(s => s.pv > 0).sort((a, b) => b.pv - a.pv).slice(0, 5);
+  const maxTopV = Math.max(...topViews.map(s => s.v), 1);
+  const withLinks = data.filter(s => s.lc > 0);
+
+  const insights = [];
+  if (bestMonth) { const [, mo] = bestMonth[0].split('-'); insights.push(`Лучшая средняя досматриваемость сторис — в ${MONTHS_RU[Number(mo) - 1].toLowerCase().replace('ь', 'е')} (${fmtNum(Math.round(bestMonth[1].v / bestMonth[1].n))} просмотров на сторис).`); }
+  insights.push(`Сторис привели ${fmtNum(total.pv)} посещений профиля и +${total.f} подписчиков — это витрина, которая двигает людей в профиль.`);
+  if (topProfile.length) insights.push(`Больше всего в профиль ведут сторис вроде «${topProfile[0].t.slice(0, 45)}…» (${topProfile[0].pv} визитов) — анонсы и личное работают.`);
+  if (withLinks.length) insights.push(`${withLinks.length} сторис со ссылками собрали ${total.lc} кликов — ссылки работают, используй чаще.`);
+  if (total.rep > 0) insights.push(`${total.rep} ответов на сторис — люди пишут в директ. Интерактивы (вопросы, стикеры: ${fmtNum(total.st)} нажатий) подогревают это.`);
+
+  const Bar = ({ frac, color }) => <div style={{ height: 8, borderRadius: 4, background: 'var(--bg-surface)', overflow: 'hidden' }}><div style={{ width: `${Math.max(2, frac * 100)}%`, height: '100%', borderRadius: 4, background: color || 'var(--accent-pink)' }} /></div>;
+
+  return <>
+    <div className="cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 20 }}>
+      <StatCard label="Сторис" value={data.length} sub={`${fmtNum(total.v)} просмотров всего`} color="var(--accent-pink)" />
+      <StatCard label="Ср. просмотры" value={fmtNum(avgV)} sub="на одну сторис" />
+      <StatCard label="Визиты в профиль" value={fmtNum(total.pv)} color="var(--accent-cyan)" />
+      <StatCard label="Подписки + клики" value={`+${total.f} · ${total.lc}`} sub="со сторис · по ссылкам" color="var(--accent-green)" />
+    </div>
+
+    {insights.length > 0 && <Card style={{ padding: 18, marginBottom: 20, background: 'var(--tint-pink)', border: '1px solid #F8CBD8' }}>
+      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>💡 Выводы для работы</div>
+      {insights.map((t, i) => <div key={i} style={{ fontSize: 13.5, lineHeight: 1.55, marginBottom: 8, display: 'flex', gap: 8 }}><span style={{ flexShrink: 0 }}>—</span><span>{t}</span></div>)}
+    </Card>}
+
+    <Card style={{ padding: 18, marginBottom: 20 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Средние просмотры по месяцам</div>
+      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>Показывает интерес аудитории независимо от количества сторис</div>
+      {months.map(([k, m]) => { const [, mo] = k.split('-'); const avg = Math.round(m.v / m.n); return <div key={k} style={{ display: 'grid', gridTemplateColumns: '52px 1fr 110px', gap: 10, alignItems: 'center', marginBottom: 10 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>{MONTHS_SHORT[Number(mo) - 1]}</div>
+        <Bar frac={avg / maxAvg} />
+        <div style={{ fontSize: 12, textAlign: 'right' }}><strong>{fmtNum(avg)}</strong> <span style={{ color: 'var(--text-muted)' }}>· {m.n} шт.</span></div>
+      </div>; })}
+    </Card>
+
+    <Card style={{ padding: 18, marginBottom: 20 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>Топ-5 по просмотрам</div>
+      {topViews.map((s, i) => <div key={i} style={{ marginBottom: 14 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 4 }}>
+          <div style={{ fontSize: 13.5, fontWeight: 500, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{i + 1}. {s.t}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{fmtNum(s.v)}</div>
+        </div>
+        <Bar frac={s.v / maxTopV} />
+        <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 3 }}>{fmtDate(s.date)} · 👤 {s.pv} в профиль · 💬 {s.rep} · ❤ {s.l}</div>
+      </div>)}
+    </Card>
+
+    {topProfile.length > 0 && <Card style={{ padding: 18, marginBottom: 20 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Ведут в профиль</div>
+      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>Сторис с максимумом переходов в профиль — так растёт аудитория</div>
+      {topProfile.map((s, i) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: '8px 0', borderBottom: i < topProfile.length - 1 ? '1px solid var(--border-light)' : 'none' }}>
+        <div style={{ fontSize: 13, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.t}</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent-cyan)', flexShrink: 0 }}>👤 {s.pv}</div>
+      </div>)}
+    </Card>}
+  </>;
+}
+
+function AudienceView() {
+  const a = IG_AUDIENCE;
+  const totalM = a.age.reduce((s, x) => s + x.m, 0), totalW = a.age.reduce((s, x) => s + x.w, 0);
+  const coreBucket = [...a.age].sort((x, y) => (y.m + y.w) - (x.m + x.w))[0];
+  const maxAge = Math.max(...a.age.map(x => Math.max(x.m, x.w)), 1);
+
+  // followers by month
+  const byMonth = {};
+  a.followers.forEach(f => { const k = f.d.slice(0, 7); byMonth[k] = (byMonth[k] || 0) + f.n; });
+  const months = Object.entries(byMonth).sort((x, y) => x[0].localeCompare(y[0]));
+  const totalF = a.followers.reduce((s, f) => s + f.n, 0);
+  const maxMonthF = Math.max(...months.map(([, n]) => n), 1);
+  const avgDay = Math.round(totalF / Math.max(1, a.followers.length));
+  const bestDay = a.followers.length ? a.followers.reduce((x, y) => (y.n > x.n ? y : x)) : null;
+  const half = Math.floor(months.length / 2);
+  const firstHalf = months.slice(0, half).reduce((s, [, n]) => s + n, 0) / Math.max(1, half);
+  const secondHalf = months.slice(half).reduce((s, [, n]) => s + n, 0) / Math.max(1, months.length - half);
+  const growing = secondHalf > firstHalf;
+
+  const insights = [];
+  if (coreBucket) insights.push(`Ядро аудитории — ${coreBucket.b} лет (${(coreBucket.m + coreBucket.w).toFixed(1).replace('.', ',')}%). ${totalM > totalW ? `Мужчин больше: ${totalM.toFixed(0)}% против ${totalW.toFixed(0)}%` : `Женщин больше: ${totalW.toFixed(0)}% против ${totalM.toFixed(0)}%`} — учитывай при выборе тем и коллабораций.`);
+  if (a.cities.length >= 3) insights.push(`География: ${a.cities[0].name.split(',')[0]}, ${a.cities[1].name.split(',')[0]} и ${a.cities[2].name.split(',')[0]} дают ${(a.cities[0].p + a.cities[1].p + a.cities[2].p).toFixed(0)}% аудитории — приоритетные города для концертов.`);
+  if (a.countries.length > 1) { const foreign = a.countries.slice(1).reduce((s, c) => s + c.p, 0); insights.push(`${a.countries[0].p.toFixed(0)}% — ${a.countries[0].name}, но ~${foreign.toFixed(0)}% из других стран (${a.countries.slice(1, 4).map(c => c.name).join(', ')}) — потенциал для международных площадок.`); }
+  insights.push(`Подписчики: +${fmtNum(totalF)} за полгода, в среднем ${avgDay}/день. Тренд ${growing ? 'растёт 📈 — темп удерживается' : 'снижается 📉 — нужен вирусный контент, смотри вкладку Публикации'}.`);
+  if (bestDay) insights.push(`Рекордный день — ${fmtDate(bestDay.d)}: +${fmtNum(bestDay.n)} подписчиков. Вспомни, что выходило накануне.`);
+
+  const Bar = ({ frac, color }) => <div style={{ height: 8, borderRadius: 4, background: 'var(--bg-surface)', overflow: 'hidden' }}><div style={{ width: `${Math.max(2, frac * 100)}%`, height: '100%', borderRadius: 4, background: color }} /></div>;
+
+  return <>
+    <div className="cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 20 }}>
+      <StatCard label="Новые подписчики" value={'+' + fmtNum(totalF)} sub={`~${avgDay} в день`} color="var(--accent-green)" />
+      <StatCard label="Ядро аудитории" value={coreBucket ? coreBucket.b : '—'} sub={coreBucket ? (coreBucket.m + coreBucket.w).toFixed(1).replace('.', ',') + '% всех' : ''} color="var(--accent-purple)" />
+      <StatCard label="М / Ж" value={`${totalM.toFixed(0)}% / ${totalW.toFixed(0)}%`} />
+      <StatCard label="Топ-город" value={a.cities[0] ? a.cities[0].name.split(',')[0] : '—'} sub={a.cities[0] ? a.cities[0].p.toFixed(1).replace('.', ',') + '%' : ''} color="var(--accent-cyan)" />
+    </div>
+
+    {insights.length > 0 && <Card style={{ padding: 18, marginBottom: 20, background: 'var(--tint-purple)', border: '1px solid #E3CBF5' }}>
+      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>💡 Выводы для работы</div>
+      {insights.map((t, i) => <div key={i} style={{ fontSize: 13.5, lineHeight: 1.55, marginBottom: 8, display: 'flex', gap: 8 }}><span style={{ flexShrink: 0 }}>—</span><span>{t}</span></div>)}
+    </Card>}
+
+    <Card style={{ padding: 18, marginBottom: 20 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>Прирост подписчиков по месяцам</div>
+      {months.map(([k, n]) => { const [, mo] = k.split('-'); return <div key={k} style={{ display: 'grid', gridTemplateColumns: '52px 1fr 80px', gap: 10, alignItems: 'center', marginBottom: 10 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>{MONTHS_SHORT[Number(mo) - 1]}</div>
+        <Bar frac={n / maxMonthF} color="var(--accent-green)" />
+        <div style={{ fontSize: 12, textAlign: 'right', fontWeight: 600 }}>+{fmtNum(n)}</div>
+      </div>; })}
+    </Card>
+
+    <Card style={{ padding: 18, marginBottom: 20 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>Возраст и пол</div>
+      <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}><span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 3, background: 'var(--accent-blue)', marginRight: 5 }} />Мужчины</span><span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 3, background: 'var(--accent-pink)', marginRight: 5 }} />Женщины</span></div>
+      {a.age.map(x => <div key={x.b} style={{ display: 'grid', gridTemplateColumns: '52px 1fr 90px', gap: 10, alignItems: 'center', marginBottom: 12 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>{x.b}</div>
+        <div><div style={{ marginBottom: 3 }}><Bar frac={x.m / maxAge} color="var(--accent-blue)" /></div><Bar frac={x.w / maxAge} color="var(--accent-pink)" /></div>
+        <div style={{ fontSize: 12, textAlign: 'right', color: 'var(--text-secondary)' }}>{x.m.toFixed(1).replace('.', ',')}% / {x.w.toFixed(1).replace('.', ',')}%</div>
+      </div>)}
+    </Card>
+
+    <div className="cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12, marginBottom: 20 }}>
+      <Card style={{ padding: 18 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>Топ городов</div>
+        {a.cities.slice(0, 8).map(c => <div key={c.name} style={{ display: 'grid', gridTemplateColumns: '1fr 60px', gap: 8, alignItems: 'center', marginBottom: 9 }}>
+          <div style={{ minWidth: 0 }}><div style={{ fontSize: 12.5, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name.split(',')[0]}</div><Bar frac={c.p / Math.max(1, a.cities[0].p)} color="var(--accent-cyan)" /></div>
+          <div style={{ fontSize: 12, textAlign: 'right', fontWeight: 600 }}>{c.p.toFixed(1).replace('.', ',')}%</div>
+        </div>)}
+      </Card>
+      <Card style={{ padding: 18 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>Топ стран</div>
+        {a.countries.slice(0, 8).map(c => <div key={c.name} style={{ display: 'grid', gridTemplateColumns: '1fr 60px', gap: 8, alignItems: 'center', marginBottom: 9 }}>
+          <div style={{ minWidth: 0 }}><div style={{ fontSize: 12.5, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</div><Bar frac={c.p / Math.max(1, a.countries[0].p)} color="var(--accent-indigo)" /></div>
+          <div style={{ fontSize: 12, textAlign: 'right', fontWeight: 600 }}>{c.p.toFixed(1).replace('.', ',')}%</div>
+        </div>)}
+      </Card>
+    </div>
+  </>;
 }
 
 const TABS = [
