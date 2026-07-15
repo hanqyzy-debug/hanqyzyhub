@@ -245,7 +245,7 @@ function ContentPlanTab({ currentUser, scripts, allFiles, onOpenScript }) {
         </div>)}
       </div>
     ) : (<>
-    {view === 'month' ? <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 0, background: 'var(--border-cal)', border: '1px solid var(--border-cal)', borderRadius: 0, overflow: 'hidden' }}>
+    {view === 'month' ? <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 0, background: 'var(--border-cal)', border: '1px solid var(--border-cal)', borderRadius: 14, overflow: 'hidden' }}>
       {DAYS_RU.map(d => <div key={d} className="cal-day-header" style={{ textAlign: 'center', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', padding: '8px 4px', background: '#fff', textTransform: 'uppercase', letterSpacing: 0.3, borderBottom: '1px solid var(--border-cal)', borderRight: '1px solid var(--border-cal)' }}>{d}</div>)}
       {calDays.map((d, i) => { if (!d) return <div key={i} style={{ background: '#FAFAFA', borderRight: '1px solid var(--border-cal)', borderBottom: '1px solid var(--border-cal)' }} />; const { content, events } = getForDay(d); const isToday = d === new Date().getDate() && month === new Date().getMonth() && year === new Date().getFullYear(); const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`; return <div key={i} className="cal-day-cell" onClick={(e) => { if (e.target === e.currentTarget || e.target.classList.contains('day-num-wrap') || e.target.classList.contains('day-cell-empty')) { setForm({ ...form, date: dateStr }); setModal('add'); } }} style={{ background: '#fff', minHeight: 96, padding: '4px 6px', borderRight: '1px solid var(--border-cal)', borderBottom: '1px solid var(--border-cal)', cursor: 'pointer', position: 'relative' }}>
         <div className="day-num-wrap" style={{ marginBottom: 3, display: 'flex', justifyContent: 'flex-end' }}>
@@ -314,7 +314,7 @@ function ContentPlanTab({ currentUser, scripts, allFiles, onOpenScript }) {
         <div style={{ gridColumn: '1/-1', borderTop: '1px solid var(--border-light)', paddingTop: 14 }}>
           <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 10 }}>Файлы</div>
           <FileList files={files} />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
+          <div className="release-files" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
             <div><div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 6 }}>🎬 Видео</div><YDFileUploader currentUser={currentUser} parentId={it._id} tag="видео" subFolder={`content/${it._id}`} /></div>
             <div><div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 6 }}>🖼 Фото</div><YDFileUploader currentUser={currentUser} parentId={it._id} tag="обложка" subFolder={`content/${it._id}`} /></div>
           </div>
