@@ -12,7 +12,7 @@ const USERS = {
 const STATUSES = { idea: { label: 'Идея', color: '#AF52DE' }, todo: { label: 'To Do', color: '#FF9500' }, in_progress: { label: 'В работе', color: '#007AFF' }, review: { label: 'Ревью', color: '#FF2D55' }, done: { label: 'Готово', color: '#34C759' } };
 const CONTENT_FORMATS = ['Reels','Story','Пост','Видео','Shorts','Клип','Подкаст','Статья','Другое'];
 const PLATFORMS = ['Instagram','VK','YouTube','TikTok','Telegram','Spotify','Yandex Music','Другое'];
-const PLATFORM_ICON = { 'Instagram': '/icons/Instagram.png', 'VK': '/icons/VK.png', 'YouTube': '/icons/Youtube.png', 'TikTok': '/icons/tiktok.png', 'Telegram': '/icons/Telegram.png', 'Spotify': '🟢', 'Yandex Music': '🟡', 'Другое': '📱' };
+const PLATFORM_ICON = { 'Instagram': '/icons/Instagram.png', 'VK': '/icons/VK.png', 'YouTube': '/icons/Youtube.png', 'TikTok': '/icons/Tiktok.png', 'Telegram': '/icons/Telegram.png', 'Spotify': '🟢', 'Yandex Music': '🟡', 'Другое': '📱' };
 function PlatformIcon({ platform, size = 12 }) { const src = PLATFORM_ICON[platform]; if (src && src.startsWith('/')) return <img src={src} alt={platform} style={{ width: size, height: size, borderRadius: 2, verticalAlign: 'middle', flexShrink: 0 }} />; return <span style={{ fontSize: size }}>{src || '📱'}</span>; }
 const RELEASE_STAGES = ['Идея','Демо','Запись','Сведение','Мастеринг','Готов к релизу','Вышел'];
 const COVER_STATES = ['Нет','В работе','Готова','Утверждена'];
