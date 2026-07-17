@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { IGPOSTS, IGSTORIES, IGAUDIENCE, TKDAILY, TKCONTENT, TKHOURLY, TKGENDER, TKGEO, YTDAILY, YTVIDEOS, YTTOTAL, YTAUDIENCE, TGPOSTS, STREAMS } from './statsData.js';
+import { IGPOSTS, IGSTORIES, IGAUDIENCE, TKDAILY, TKCONTENT, TKHOURLY, TKGENDER, TKGEO, YTDAILY, YTVIDEOS, YTTOTAL, YTAUDIENCE, TGPOSTS } from './statsData.js';
 import { DW, MS, MFULL, fmtNum, fmtFull, pct, fmtD, mean, sum, groupBy, Panel, Kpi, KpiRow, BarRow, AreaChart, HourStrip, Insights, SortTable, Goal } from './statsUI.jsx';
 
 const C = { ig: 'var(--accent-pink)', tk: 'var(--accent-indigo)', yt: 'var(--accent-red)', tg: 'var(--accent-cyan)', st: 'var(--accent-green)', pl: 'var(--accent-orange)' };
@@ -9,7 +9,6 @@ const PLATFORMS = [
   { id: 'tiktok', l: 'TikTok', c: C.tk },
   { id: 'youtube', l: 'YouTube', c: C.yt },
   { id: 'telegram', l: 'Telegram', c: C.tg },
-  { id: 'streaming', l: 'Стриминги', c: C.st },
   { id: 'plan', l: 'План', c: C.pl },
 ];
 const er = p => (p.r ? (p.l + p.c + p.s + p.rp) / p.r * 100 : 0);
@@ -31,7 +30,6 @@ export default function StatsTab() {
     {p === 'tiktok' && <TikTok />}
     {p === 'youtube' && <YouTube />}
     {p === 'telegram' && <Telegram />}
-    {p === 'streaming' && <Streaming />}
     {p === 'plan' && <Plan />}
   </div>;
 }
@@ -41,8 +39,6 @@ function Overview({ go }) {
   const igV = sum(IGPOSTS.map(x => x.v)), igF = sum(IGAUDIENCE.followers.map(f => f.n));
   const tkV = sum(TKDAILY.map(x => x.v)), ytV = YTTOTAL.v;
   const tgR = sum(TGPOSTS.filter(x => x.date >= '2026').map(x => x.reac));
-  const stQ = sum(STREAMS.filter(s => s.usage.includes('Stream')).map(s => s.qty));
-  const stR = sum(STREAMS.map(s => s.roy));
   const total = igV + tkV + ytV;
 
   const rows = [
@@ -62,16 +58,15 @@ function Overview({ go }) {
   const ins = [
     `<b>Общий охват — ${fmtNum(total)} просмотров за полгода</b> на трёх видеоплощадках. Это уровень, при котором можно говорить с фестивалями и брендами цифрами, а не «ощущениями».`,
     `<b>YouTube — недооценённый актив.</b> ${fmtNum(ytV)} просмотров всего с ${YTVIDEOS.length} роликов при CTR ${pct(YTTOTAL.ctr)} (норма 4–6%, у тебя выше). При этом ты вкладываешься в него меньше всего — это самый дешёвый рост.`,
-    `<b>Отчёт по стримингам неполный — там только март</b> и без части площадок по одному из треков. Смотри вкладку «Стриминги»: там список, что запросить у лейбла. Реальные цифры сверяй в кабинете артиста, а не в роялти-отчёте.`,
-    `<b>Три площадки — три разные аудитории.</b> В Instagram больше мужчин, в TikTok 56% женщин, на YouTube ядро 25–44. Один и тот же ролик стоит по-разному подписывать под каждую.`,
+    `<b>Три площадки — три разные аудитории.</b> В Instagram больше мужчин, в TikTok 56% женщин, на YouTube ядро 25–44. Один и тот же ролик стоит подписывать по-разному под каждую.`,
   ];
 
   return <>
     <KpiRow>
       <Kpi label="Просмотры всего" value={fmtNum(total)} sub="IG + YouTube + TikTok" color="var(--accent-blue)" />
       <Kpi label="Подписчики IG" value={'+' + fmtNum(igF)} sub="за 6,5 месяцев" color={C.ig} />
-      <Kpi label="Прослушивания" value={fmtNum(stQ)} sub="только март 2026" color={C.st} />
-      <Kpi label="Роялти" value={Math.round(stR) + ' €'} sub="только март 2026" color={C.st} />
+      <Kpi label="YouTube" value={fmtNum(ytV)} sub={`CTR ${pct(YTTOTAL.ctr)} · норма 4–6%`} color={C.yt} />
+      <Kpi label="Реакции в TG" value={fmtNum(tgR)} sub={`${TGPOSTS.filter(x => x.date >= '2026').length} постов`} color={C.tg} />
     </KpiRow>
     <Insights items={ins} />
     <Panel title="Просмотры по месяцам — все площадки" hint="Суммарно Instagram + YouTube + TikTok">
@@ -474,74 +469,6 @@ function Telegram() {
   </>;
 }
 
-/* ═══════════ СТРИМИНГИ ═══════════ */
-function Streaming() {
-  const s = STREAMS;
-  const streams = s.filter(x => x.usage.includes('Stream'));
-  const agg = (arr, key, val) => Object.entries(arr.reduce((o, x) => { o[x[key]] = (o[x[key]] || 0) + x[val]; return o; }, {})).sort((a, b) => b[1] - a[1]);
-  const shops = agg(streams, 'shop', 'qty');
-  const tracks = agg(streams, 'track', 'qty');
-  const ctry = agg(streams, 'country', 'qty');
-  const royShop = Object.fromEntries(agg(s, 'shop', 'roy'));
-  const totQ = sum(streams.map(x => x.qty)), totR = sum(s.map(x => x.roy));
-  const perK = totR / (totQ / 1000);
-  const periods = [...new Set(s.map(x => x.period))];
-  // detect tracks missing major DSPs -> reporting gap
-  const perTrackShops = {};
-  streams.forEach(x => { (perTrackShops[x.track] = perTrackShops[x.track] || new Set()).add(x.shop); });
-  const gaps = Object.entries(perTrackShops).filter(([, sh]) => ![...sh].some(x => /Yandex/i.test(x)) || ![...sh].some(x => /Spotify/i.test(x)))
-    .map(([t, sh]) => ({ t, missing: [!([...sh].some(x => /Yandex/i.test(x))) && 'Яндекс', !([...sh].some(x => /Spotify/i.test(x))) && 'Spotify'].filter(Boolean) }));
-  const yandexShare = (shops.filter(x => /Yandex/i.test(x[0])).reduce((a, b) => a + b[1], 0)) / totQ * 100;
-  const ruShare = (ctry.find(c => c[0] === 'RU')?.[1] || 0) / totQ * 100;
-  const mxS = shops[0][1];
-
-  const ins = [
-    `<b>Это отчёт за один месяц — март 2026.</b> Несмотря на название файла «01.01–31.03», все строки помечены периодом ${periods.join(', ')}. Январь и февраль в выгрузку не попали — запроси их у лейбла, иначе картина квартала неполная.`,
-    `<b>Цифры в кабинете артиста и в роялти-отчёте — это разные вещи.</b> В «Яндекс Музыке для артистов» и Spotify for Artists показаны накопленные прослушивания с момента релиза (lifetime). Здесь — начисления за один месяц. Если на треке 100 тыс. в кабинете, а тут 6 тыс. — это не ошибка, это разные метрики.`,
-    gaps.length ? `<b>⚠️ Дыра в отчётности: у трека «${gaps[0].t}» нет строк ${gaps[0].missing.join(' и ')}.</b> У других треков они есть — значит дело не в том, что трека там нет. «${gaps[0].t}» идёт по отдельному контракту, и по нему отчитались только Apple Music и YouTube. <b>Это вопрос к лейблу/дистрибьютору:</b> почему не пришли данные ${gaps[0].missing.join(' и ')} и когда будут доначислены.` : null,
-    `<b>Яндекс — ${pct(yandexShare)} прослушиваний</b> среди того, что попало в отчёт. Это твоя главная площадка. Там есть «Импульс» — платное продвижение от 5 000 слушателей в месяц через BandLink, до 70% охвата идёт на новую аудиторию.`,
-    `<b>${Math.round(totR)} € за месяц — ${perK.toFixed(1).replace('.', ',')} € с тысячи прослушиваний.</b> Стриминг — не заработок, а витрина и доказательство спроса для букеров. Деньги — в концертах, а статистика нужна, чтобы их получать.`,
-    `<b>Сверяй по кабинетам, а не по отчёту.</b> Роялти-отчёт приходит с задержкой 1–2 месяца и только по тем площадкам, что успели отчитаться. Для оперативной картины смотри «Яндекс Музыка для артистов», Spotify for Artists и BandLink.`,
-  ].filter(Boolean);
-
-  return <>
-    <div className="ios-card" style={{ padding: 14, marginBottom: 14, background: 'var(--tint-orange)', border: '1px solid #F8DFB0' }}>
-      <div style={{ fontSize: 13.5, lineHeight: 1.5 }}><b>⚠️ Данные неполные.</b> Отчёт содержит только <b>март 2026</b>{gaps.length ? <> и в нём <b>нет данных {gaps[0].missing.join(' и ')} по треку «{gaps[0].t}»</b></> : ''}. Не сравнивай эти цифры с кабинетом артиста — там lifetime, здесь один месяц.</div>
-    </div>
-    <KpiRow>
-      <Kpi label="Прослушивания" value={fmtNum(totQ)} sub="март 2026, что в отчёте" color={C.st} />
-      <Kpi label="Роялти" value={Math.round(totR) + ' €'} sub={`${perK.toFixed(1).replace('.', ',')} € за 1000`} color={C.st} />
-      <Kpi label="Площадок" value={shops.length} sub={`${ctry.length} стран`} />
-      <Kpi label="Из России" value={pct(ruShare)} />
-    </KpiRow>
-    <Insights items={ins} tint="var(--tint-green)" border="#BFE8CE" />
-    {gaps.length > 0 && <Panel title="Что запросить у лейбла" hint="Проверка полноты отчёта: какие площадки отчитались по каждому треку">
-      {Object.entries(perTrackShops).map(([t, sh]) => {
-        const has = n => [...sh].some(x => new RegExp(n, 'i').test(x));
-        return <div key={t} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: '10px 0', borderBottom: '1px solid var(--border-light)', flexWrap: 'wrap' }}>
-          <div style={{ fontSize: 13.5, fontWeight: 600 }}>{t}</div>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {[['Яндекс', 'Yandex'], ['Spotify', 'Spotify'], ['VK', 'Vkontakte|VK'], ['Apple', 'Apple'], ['YouTube', 'YouTube']].map(([l, rx]) =>
-              <span key={l} style={{ fontSize: 11.5, fontWeight: 600, padding: '3px 9px', borderRadius: 20, background: has(rx) ? 'var(--tint-green)' : 'var(--tint-red)', color: has(rx) ? 'var(--accent-green)' : 'var(--accent-red)' }}>{has(rx) ? '✓' : '✕'} {l}</span>)}
-          </div>
-        </div>;
-      })}
-      <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 12, lineHeight: 1.5 }}>
-        Красное — площадка не отчиталась по треку в этом периоде. Спроси у лейбла: <b>«почему по треку {gaps[0].t} нет начислений {gaps[0].missing.join(' и ')} за март и когда они будут?»</b> Плюс запроси отчёты за январь и февраль.
-      </div>
-    </Panel>}
-    <Panel title="Площадки" hint="Прослушивания и роялти за март по тому, что попало в отчёт">
-      {shops.slice(0, 8).map(([k, v]) => <BarRow key={k} label={k} labelW={130} frac={v / mxS} value={fmtNum(v)} sub={royShop[k] ? `· ${royShop[k].toFixed(0)} €` : ''} color={/Yandex/i.test(k) ? 'var(--accent-yellow)' : /Vkontakte|VK/i.test(k) ? 'var(--accent-blue)' : /YouTube/i.test(k) ? 'var(--accent-red)' : /Apple/i.test(k) ? 'var(--text-secondary)' : /Spotify/i.test(k) ? 'var(--accent-green)' : 'var(--accent-cyan)'} />)}
-    </Panel>
-    <Panel title="Треки" hint="Только по данным отчёта за март — не сравнивай с кабинетом артиста">
-      {tracks.map(([k, v]) => <BarRow key={k} label={k} labelW={92} frac={v / tracks[0][1]} value={fmtNum(v)} sub={`· ${pct(v / totQ * 100)}`} color="var(--accent-purple)" />)}
-    </Panel>
-    <Panel title="География прослушиваний">
-      {ctry.slice(0, 10).map(([k, v]) => <BarRow key={k} label={k} labelW={50} frac={v / ctry[0][1]} value={fmtNum(v)} sub={`· ${pct(v / totQ * 100)}`} color={C.st} />)}
-    </Panel>
-  </>;
-}
-
 /* ═══════════ ПЛАН ═══════════ */
 function Plan() {
   const igF = sum(IGAUDIENCE.followers.map(f => f.n));
@@ -551,7 +478,6 @@ function Plan() {
   const tkW = TKCONTENT.length / 28;
   const ytW = YTVIDEOS.length / 28;
   const stW = IGSTORIES.length / 196;
-  const totQ = sum(STREAMS.filter(x => x.usage.includes('Stream')).map(x => x.qty));
 
   const SCHED = [
     { d: 'Пн', items: [{ t: '17:00', p: 'IG Reels', c: C.ig }, { t: '21:00', p: 'TikTok', c: C.tk }, { t: '16:00', p: 'Telegram', c: C.tg }] },
@@ -566,7 +492,7 @@ function Plan() {
   return <>
     <Insights title="🎯 Логика плана" tint="var(--tint-orange)" border="#F8DFB0" items={[
       `<b>Главный вывод из всей статистики:</b> ты умеешь делать вирусный контент — ${fmtNum(igV)} просмотров в Instagram и ${fmtNum(YTTOTAL.v)} на YouTube это доказали. Проблема не в качестве, а в частоте и в том, что зритель не превращается в слушателя.`,
-      `<b>Три рычага на полугодие:</b> 1) поднять частоту в TikTok и YouTube — там ты почти не публикуешь при отличных показателях; 2) сдвинуть время Telegram на ${'15–18'} — бесплатный рост вовлечённости; 3) вести трафик в Яндекс.Музыку из каждого ролика.`,
+      `<b>Три рычага на полугодие:</b> 1) поднять частоту в TikTok и YouTube — там ты почти не публикуешь при отличных показателях; 2) сдвинуть время Telegram на 15–18 — бесплатный рост вовлечённости; 3) вести трафик в Яндекс.Музыку из каждого ролика и сверять эффект в кабинете артиста.`,
       `<b>Не увеличивай Instagram.</b> ${igW.toFixed(1).replace('.', ',')} поста в неделю при таком ER — это здоровый ритм. Лучше добери охват на площадках, где ты недоинвестируешь.`,
     ]} />
 
@@ -610,14 +536,12 @@ function Plan() {
     <Panel title="Цели на полугодие" hint="Амбициозно, но достижимо при текущем темпе">
       <Goal icon="📈" title="Подписчики Instagram" now={'+' + fmtNum(igF)} target="+15 тыс." color={C.ig} note="Текущий темп ~4–6% в месяц — выше нормы (1–2%). Задача — удержать, не потеряв ER." />
       <Goal icon="👀" title="Просмотры Instagram" now={fmtNum(igV)} target="5 млн" color={C.ig} note="За счёт частоты 4–5 в неделю и длинных Reels 60+ секунд" />
-      <Goal icon="🎵" title="Прослушивания" now={fmtNum(totQ)} target="60 тыс." unit="/мес" color={C.st} note="Данные за март. Рычаг — призыв к прослушиванию в каждом ролике + смартлинк в шапке профиля" />
       <Goal icon="🚀" title="Яндекс.Музыка" now="?" target="5 тыс." unit="слуш./мес" color="var(--accent-yellow)" note="Порог для инструмента «Импульс» — платного продвижения. Проверь показатель в BandLink: если рядом — это следующий большой рычаг" />
       <Goal icon="🎤" title="Второй хит" now="1" target="2" unit="трека" color="var(--accent-purple)" note="Каталог держится на KARA BAY. Нужен второй трек такого же уровня, чтобы снять зависимость от одного" />
     </Panel>
 
     <Insights title="⚠️ О чём помнить" tint="var(--bg-surface)" border="var(--border-light)" items={[
       `Время Instagram пересчитано из тихоокеанского пояса (так выгружает Meta) в МСК с учётом летнего времени. Часы TikTok — как отдаёт сам TikTok.`,
-      `Данные по стримингу — только за март 2026 и без части площадок по треку SHAITAN. Соцсети — по 15 июля. Прямое сравнение периодов некорректно.`,
       `Выводы по дням недели для пятницы и субботы построены на 3 публикациях — это мало. Проверь ещё раз, прежде чем совсем убирать эти дни.`,
       `Telegram не отдаёт просмотры в экспорт — вовлечённость считалась по реакциям.`,
     ]} />
