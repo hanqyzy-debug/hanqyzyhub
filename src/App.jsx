@@ -345,9 +345,57 @@ function ContentPlanTab({ currentUser, scripts, allFiles, onOpenScript }) {
 }
 
 /* ═══ 2. SCRIPTS (auto-open editor on create) ═══ */
+// Темпы речи (слов в минуту) — как на hronomer.ru
+const SPEECH_PACE = [
+  { id: 'slow', label: 'Медленно', wpm: 100, hint: 'вдумчиво, реклама, аудиогид' },
+  { id: 'normal', label: 'Обычно', wpm: 130, hint: 'спокойная начитка, закадр' },
+  { id: 'fast', label: 'Быстро', wpm: 160, hint: 'энергично, разговорный Reels' },
+];
+function analyzeText(text) {
+  const t = (text || '').trim();
+  const words = t ? t.split(/\s+/).filter(Boolean).length : 0;
+  const chars = (text || '').length;
+  const charsNoSpace = (text || '').replace(/\s/g, '').length;
+  // Стандартная «страница» = 1800 знаков с пробелами
+  const pages = chars / 1800;
+  return { words, chars, charsNoSpace, pages };
+}
+function fmtDur(sec) {
+  const m = Math.floor(sec / 60), s = Math.round(sec % 60);
+  if (m === 0) return `${s} сек`;
+  return `${m} мин ${String(s).padStart(2, '0')} сек`;
+}
+function Chronometer({ text, pace, setPace }) {
+  const { words, chars, pages } = analyzeText(text);
+  const wpm = SPEECH_PACE.find(p => p.id === pace)?.wpm || 130;
+  const sec = words / wpm * 60;
+  return <div className="ios-card" style={{ padding: 14, marginTop: 10, background: 'var(--bg-card)' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+      <div style={{ fontSize: 13.5, fontWeight: 700 }}>⏱ Хронометраж</div>
+      <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--accent-purple)', letterSpacing: -0.5 }}>{fmtDur(sec)}</div>
+    </div>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 12 }}>
+      <div style={{ textAlign: 'center', padding: '8px 4px', background: 'var(--bg-surface)', borderRadius: 10 }}>
+        <div style={{ fontSize: 17, fontWeight: 700 }}>{words}</div><div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>слов</div>
+      </div>
+      <div style={{ textAlign: 'center', padding: '8px 4px', background: 'var(--bg-surface)', borderRadius: 10 }}>
+        <div style={{ fontSize: 17, fontWeight: 700 }}>{chars}</div><div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>знаков</div>
+      </div>
+      <div style={{ textAlign: 'center', padding: '8px 4px', background: 'var(--bg-surface)', borderRadius: 10 }}>
+        <div style={{ fontSize: 17, fontWeight: 700 }}>{pages.toFixed(1).replace('.', ',')}</div><div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{pages < 2 ? 'страница' : 'страниц'}</div>
+      </div>
+    </div>
+    <div className="seg-control" style={{ width: '100%', display: 'flex' }}>
+      {SPEECH_PACE.map(p => <button key={p.id} onClick={() => setPace(p.id)} className={pace === p.id ? 'seg-active' : ''} style={{ flex: 1 }} title={`${p.wpm} слов/мин — ${p.hint}`}>{p.label}</button>)}
+    </div>
+    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8, textAlign: 'center' }}>{SPEECH_PACE.find(p => p.id === pace)?.wpm} слов/мин · {SPEECH_PACE.find(p => p.id === pace)?.hint}</div>
+  </div>;
+}
+
 function ScriptsTab({ currentUser, scripts, openScriptId, setOpenScriptId }) {
   const [modal, setModal] = useState(null); const [form, setForm] = useState({ title: '', location: '', format: '' }); const [saved, setSaved] = useState(false); const [localBody, setLocalBody] = useState('');
   const [showArchive, setShowArchive] = useState(false);
+  const [pace, setPace] = useState('normal');
   const all = toList(scripts);
   const list = all.filter(s => showArchive ? s.archived : !s.archived);
   const archivedCount = all.filter(s => s.archived).length;
@@ -389,6 +437,7 @@ function ScriptsTab({ currentUser, scripts, openScriptId, setOpenScriptId }) {
           <Field label="🎬 Формат"><input value={s.format || ''} onChange={e => fbUpdate(`scripts/${s._id}`, { format: e.target.value, updatedBy: currentUser, updatedAt: now() })} /></Field>
         </div>
         <Field label="Сценарий"><textarea className="script-body" value={localBody} onChange={e => { setLocalBody(e.target.value); setSaved(false); }} rows={18} style={{ fontFamily: 'var(--font-mono)', fontSize: 13.5, lineHeight: 1.65, letterSpacing: 0, background: '#FAFAFA', border: '1px solid var(--border-light)', borderRadius: 14, padding: 20, width: '100%', minHeight: 400 }} placeholder="Напиши сценарий..." /></Field>
+        <Chronometer text={localBody} pace={pace} setPace={setPace} />
         <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-muted)' }}>{USERS[s.updatedBy]?.name} · {s.updatedAt}</div>
       </div>; })()}
     </Modal>
