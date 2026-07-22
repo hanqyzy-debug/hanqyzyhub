@@ -10,7 +10,17 @@ const USERS = {
   leyla: { name: 'Leyla', color: '#FF3B30', avatar: 'L', photo: 'https://ui-avatars.com/api/?name=Leyla+H&background=FF3B30&color=fff&size=128&font-size=0.45&bold=true' },
   manager: { name: 'Manager', color: '#007AFF', avatar: 'M', photo: 'https://ui-avatars.com/api/?name=M&background=007AFF&color=fff&size=128&font-size=0.45&bold=true' },
 };
-const STATUSES = { idea: { label: 'Идея', color: '#AF52DE' }, todo: { label: 'To Do', color: '#FF9500' }, in_progress: { label: 'В работе', color: '#007AFF' }, review: { label: 'Ревью', color: '#FF2D55' }, done: { label: 'Готово', color: '#34C759' } };
+const STATUSES = {
+  idea: { label: 'Идея', color: '#AF52DE' },
+  script: { label: 'Сценарий', color: '#007AFF' },
+  shooting: { label: 'Съёмки', color: '#FF9500' },
+  editing: { label: 'Монтаж', color: '#5856D6' },
+  approval: { label: 'Утверждение', color: '#FF2D55' },
+  done: { label: 'Готово', color: '#34C759' },
+};
+// Старые статусы из базы → новые (чтобы ничего не потерялось)
+const LEGACY_STATUS = { todo: 'script', in_progress: 'shooting', review: 'approval', 'Идея': 'idea', 'Готово': 'done' };
+const stKey = s => (STATUSES[s] ? s : (LEGACY_STATUS[s] || 'idea'));
 const CONTENT_FORMATS = ['Reels','Story','Пост','Видео','Shorts','Клип','Подкаст','Статья','Другое'];
 const PLATFORMS = ['Instagram','VK','YouTube','TikTok','Telegram','Spotify','Yandex Music','Другое'];
 const PLATFORM_ICON = { 'Instagram': '/icons/Instagram.png', 'VK': '/icons/VK.png', 'YouTube': '/icons/Youtube.png', 'TikTok': '/icons/Tiktok.png', 'Telegram': '/icons/Telegram.png', 'Spotify': '🟢', 'Yandex Music': '🟡', 'Другое': '📱' };
@@ -252,7 +262,7 @@ function ContentPlanTab({ currentUser, scripts, allFiles, onOpenScript }) {
         <div className="day-num-wrap" style={{ marginBottom: 3, display: 'flex', justifyContent: 'flex-end' }}>
           {isToday ? <div className="cal-day-today" style={{ width: 22, height: 22, borderRadius: '50%', background: 'var(--accent-red)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600 }}>{d}</div> : <div className="cal-day-num" style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', padding: '2px 6px' }}>{d}</div>}
         </div>
-        {content.map(it => { const ps = getPlatforms(it); return <div key={it._id} className="cal-item" onClick={e => { e.stopPropagation(); setModal(it._id); }} style={{ fontSize: 11, padding: '2px 4px', borderRadius: 4, marginBottom: 1, cursor: 'pointer', color: 'var(--text-primary)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: '50%', background: STATUSES[it.status]?.color || '#888', flexShrink: 0 }} />
+        {content.map(it => { const ps = getPlatforms(it); return <div key={it._id} className="cal-item" onClick={e => { e.stopPropagation(); setModal(it._id); }} style={{ fontSize: 11, padding: '2px 4px', borderRadius: 4, marginBottom: 1, cursor: 'pointer', color: 'var(--text-primary)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: '50%', background: STATUSES[stKey(it.status)].color, flexShrink: 0 }} />
           <span style={{ display: 'inline-flex', gap: 2, flexShrink: 0 }}>{ps.slice(0, 3).map((p, i) => <PlatformIcon key={i} platform={p} size={10} />)}</span>
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.title}</span>
         </div>; })}
@@ -263,7 +273,7 @@ function ContentPlanTab({ currentUser, scripts, allFiles, onOpenScript }) {
       {getWeekDays().map((d, i) => { const ds = d.toISOString().slice(0, 10); const isToday = ds === today(); const dc = list.filter(it => it.date === ds); const de = allEvents.filter(e => e.date === ds); return <Card key={i} style={{ padding: 12, borderColor: isToday ? 'var(--accent-blue)' : undefined, minHeight: 160, cursor: 'pointer' }} onClick={(e) => { if (e.target === e.currentTarget) { setForm({ ...form, date: ds }); setModal('add'); } }}>
         <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>{DAYS_RU[i]}</div>
         {isToday ? <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--accent-red)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600, marginBottom: 8 }}>{d.getDate()}</div> : <div style={{ fontSize: 18, fontWeight: 400, marginBottom: 8 }}>{d.getDate()}</div>}
-        {dc.map(it => { const ps = getPlatforms(it); return <div key={it._id} onClick={e => { e.stopPropagation(); setModal(it._id); }} style={{ fontSize: 12, padding: 8, borderRadius: 8, marginBottom: 4, cursor: 'pointer', background: (STATUSES[it.status]?.color || '#888') + '12', borderLeft: `3px solid ${STATUSES[it.status]?.color || '#888'}` }}>
+        {dc.map(it => { const ps = getPlatforms(it); return <div key={it._id} onClick={e => { e.stopPropagation(); setModal(it._id); }} style={{ fontSize: 12, padding: 8, borderRadius: 8, marginBottom: 4, cursor: 'pointer', background: (STATUSES[stKey(it.status)].color) + '12', borderLeft: `3px solid ${STATUSES[stKey(it.status)].color}` }}>
           <div style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ display: 'inline-flex', gap: 2 }}>{ps.slice(0, 3).map((p, i) => <PlatformIcon key={i} platform={p} size={12} />)}</span> {it.title}</div>
         </div>; })}
         {de.map(ev => <div key={ev._id} style={{ fontSize: 12, padding: 6, borderRadius: 8, marginBottom: 4, background: ev.color + '15', borderLeft: `3px solid ${ev.color}`, color: ev.color }}>{ev.title}</div>)}
@@ -276,7 +286,7 @@ function ContentPlanTab({ currentUser, scripts, allFiles, onOpenScript }) {
         <div className="c-title"><div style={{ fontWeight: 500 }}>{it.title}</div>{it.statusChangedBy && <span style={{ fontSize: 11, color: 'var(--text-muted)' }}><span style={{ color: USERS[it.statusChangedBy]?.color }}>{USERS[it.statusChangedBy]?.name}</span></span>}</div>
         <div className="c-plat" style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>{ps.slice(0, 3).map((p, i) => <span key={i} title={p}><PlatformIcon platform={p} size={14} /></span>)}{ps.length > 3 && <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>+{ps.length - 3}</span>}</div>
         <Badge color="var(--accent-purple)">{it.format}</Badge>
-        <Badge color={STATUSES[it.status]?.color}>{STATUSES[it.status]?.label}</Badge>
+        <Badge color={STATUSES[stKey(it.status)].color}>{STATUSES[stKey(it.status)].label}</Badge>
         <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{fmtDate(it.date)}</span>
         {ls ? <button className="c-script" onClick={e => { e.stopPropagation(); onOpenScript(ls._id); }} style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', fontSize: 12, cursor: 'pointer', textAlign: 'left', padding: 0 }}>📝 {ls.title}</button> : <span className="c-script" style={{ color: 'var(--text-muted)' }}>—</span>}
         <span className="c-files" style={{ fontSize: 12, color: files.length ? 'var(--accent-green)' : 'var(--text-muted)' }}>{files.length ? `📁${files.length}` : '—'}</span>
@@ -309,7 +319,7 @@ function ContentPlanTab({ currentUser, scripts, allFiles, onOpenScript }) {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{PLATFORMS.map(p => { const sel = currentPlatforms.includes(p); return <button key={p} type="button" onClick={() => { const np = sel ? currentPlatforms.filter(x => x !== p) : [...currentPlatforms, p]; updateItem(it._id, { platforms: np, platform: null }); }} style={{ padding: '6px 12px', borderRadius: 16, border: `1.5px solid ${sel ? 'var(--accent-blue)' : 'var(--border)'}`, background: sel ? 'var(--accent-blue)' : '#fff', color: sel ? '#fff' : 'var(--text-primary)', fontSize: 12, fontWeight: 500, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5 }}><PlatformIcon platform={p} size={12} /> {p}</button>; })}</div>
           </Field>
         </div>
-        <Field label="Статус"><select value={it.status || 'idea'} onChange={e => changeStatus(it._id, e.target.value, it.title)}>{STATUS_KEYS.map(s => <option key={s} value={s}>{STATUSES[s].label}</option>)}</select>{it.statusChangedBy && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>отметил: <span style={{ color: USERS[it.statusChangedBy]?.color }}>{USERS[it.statusChangedBy]?.name}</span></div>}</Field>
+        <Field label="Статус"><select value={stKey(it.status)} onChange={e => changeStatus(it._id, e.target.value, it.title)}>{STATUS_KEYS.map(s => <option key={s} value={s}>{STATUSES[s].label}</option>)}</select>{it.statusChangedBy && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>отметил: <span style={{ color: USERS[it.statusChangedBy]?.color }}>{USERS[it.statusChangedBy]?.name}</span></div>}</Field>
         <Field label="Сценарий"><select value={it.scriptId || ''} onChange={e => updateItem(it._id, { scriptId: e.target.value })}><option value="">— нет —</option>{scriptList.map(s => <option key={s._id} value={s._id}>{s.title}</option>)}</select>{ls && <button onClick={() => { setModal(null); setTimeout(() => onOpenScript(ls._id), 100); }} style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', fontSize: 12, cursor: 'pointer', marginTop: 4, padding: 0 }}>→ Открыть «{ls.title}»</button>}</Field>
         <div style={{ gridColumn: '1/-1' }}><Field label="Метрики"><input value={it.metricsData || ''} onChange={e => updateItem(it._id, { metricsData: e.target.value })} /></Field></div>
         <div style={{ gridColumn: '1/-1', borderTop: '1px solid var(--border-light)', paddingTop: 14 }}>
